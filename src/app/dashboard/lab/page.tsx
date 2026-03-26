@@ -118,6 +118,9 @@ export default function LaboratoryPortal() {
                   <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                     Patient: {o.visit?.patient?.name} | Token: #{o.visit?.tokenNumber}
                   </div>
+                  <div style={{ fontSize: '12px', color: 'var(--secondary)', marginTop: '4px' }}>
+                    Ref: Dr. {o.visit?.doctor?.name}
+                  </div>
                 </div>
               )) : (
                 <p style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No orders awaiting processing.</p>
@@ -130,9 +133,15 @@ export default function LaboratoryPortal() {
             {selectedOrder ? (
               <>
                 <h3 style={{ marginBottom: '10px' }}>Fill Report</h3>
-                <p className="mb-6" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
+                <p className="mb-2" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
                   {selectedOrder.testName} - {selectedOrder.visit?.patient?.name}
                 </p>
+                <div style={{ padding: '10px', background: 'rgba(0,0,0,0.05)', borderRadius: '8px', marginBottom: '20px', fontSize: '13px' }}>
+                  <div className="mb-1"><strong>Doctor:</strong> Dr. {selectedOrder.visit?.doctor?.name}</div>
+                  {selectedOrder.visit?.chiefComplaints && (
+                    <div><strong>Complaints:</strong> {selectedOrder.visit.chiefComplaints}</div>
+                  )}
+                </div>
                 
                 <form className="flex flex-col gap-4" onSubmit={handleSubmitReport}>
                   <div className="form-group">

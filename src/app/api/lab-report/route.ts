@@ -30,7 +30,8 @@ export async function GET() {
       include: {
         visit: {
           include: {
-            patient: true
+            patient: true,
+            doctor: true
           }
         }
       },

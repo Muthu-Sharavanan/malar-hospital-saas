@@ -155,8 +155,12 @@ export default function PharmacyPortal() {
                        </div>
                        <div className="flex justify-between items-center">
                           <span style={{ fontSize: '12px' }}>Dur: {item.duration}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>{item.instructions}</span>
+                       </div>
+                       <div className="flex justify-between items-center mt-2">
+                          <span style={{ fontSize: '12px', color: 'var(--primary)' }}>Price ₹</span>
                           <input 
-                             type="number" className="form-input" style={{ width: '100px', padding: '5px' }} placeholder="Price ₹" 
+                             type="number" className="form-input" style={{ width: '100px', padding: '5px' }} placeholder="0" 
                              value={prices[item.id] || ''} onChange={e => setPrices({...prices, [item.id]: parseFloat(e.target.value)})}
                           />
                        </div>
