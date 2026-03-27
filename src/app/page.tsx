@@ -31,6 +31,7 @@ export default function LoginPage() {
         else if (data.user.role === 'RECEPTIONIST') router.replace('/dashboard/reception');
         else if (data.user.role === 'PHARMACIST') router.replace('/dashboard/pharmacy');
         else if (data.user.role === 'LAB_TECH') router.replace('/dashboard/lab');
+        else if (data.user.role === 'ADMIN') router.replace('/dashboard/admin');
         else router.replace('/dashboard');
       } else {
         setError(data.error || 'Login failed');
@@ -55,6 +56,7 @@ export default function LoginPage() {
           else if (role === 'RECEPTIONIST') path = '/dashboard/reception';
           else if (role === 'PHARMACIST') path = '/dashboard/pharmacy';
           else if (role === 'LAB_TECH') path = '/dashboard/lab';
+          else if (role === 'ADMIN') path = '/dashboard/admin';
           router.replace(path);
         } else {
           setCheckingSession(false);
