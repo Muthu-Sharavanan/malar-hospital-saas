@@ -3,15 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   try {
-    const userCount = await prisma.user.count();
-    
-    // Only seed if the database is empty or has very few users (e.g., the test user)
-    if (userCount > 5) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Database already has users. Seeding skipped for safety." 
-      });
-    }
+    // Seed using upsert for idempotency
 
     const users = [
       { name: 'Dr. Ramasamy', email: 'doctor@malar.com', password: 'password123', role: 'DOCTOR' },
