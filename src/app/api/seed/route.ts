@@ -15,6 +15,7 @@ export async function GET(req: Request) {
 
     const users = [
       { name: 'Dr. Ramasamy', email: 'doctor@malar.com', password: 'password123', role: 'DOCTOR' },
+      { name: 'Dr. Aravind', email: 'aravind@malar.com', password: 'password123', role: 'DOCTOR' },
       { name: 'Nurse Anitha', email: 'nurse@malar.com', password: 'password123', role: 'NURSE' },
       { name: 'Receptionist Susi', email: 'reception@malar.com', password: 'password123', role: 'RECEPTIONIST' },
       { name: 'Pharmacist Ravi', email: 'pharmacy@malar.com', password: 'password123', role: 'PHARMACIST' },

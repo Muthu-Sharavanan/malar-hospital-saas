@@ -59,7 +59,7 @@ export default function ReceptionDashboard() {
 
   const fetchDoctors = async () => {
     try {
-      const res = await fetch('/api/users?role=DOCTOR');
+      const res = await fetch(`/api/users?role=DOCTOR&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
         setDoctors(data.users);
@@ -240,25 +240,28 @@ export default function ReceptionDashboard() {
         <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px' }}>Malar HMS</h2>
         <nav className="flex flex-col gap-4" style={{ flex: 1 }}>
           <button 
-            className="flex items-center gap-2 w-full text-left"
-            style={{ padding: '10px', borderRadius: '8px', background: activeTab === 'register' ? 'rgba(255,255,255,0.2)' : 'transparent', color: 'white', border: 'none', cursor: 'pointer' }}
-            onClick={() => setActiveTab('register')}
+             className={`tab-btn ${activeTab === 'register' ? 'active' : ''}`}
+             onClick={() => setActiveTab('register')}
           >
-            <i className="fa-solid fa-user-plus"></i> Registration
+            <i className="fa-solid fa-user-plus mr-2"></i> Register Patient
           </button>
           <button 
-            className="flex items-center gap-2 w-full text-left"
-            style={{ padding: '10px', borderRadius: '8px', background: activeTab === 'queue' ? 'rgba(255,255,255,0.2)' : 'transparent', color: 'white', border: 'none', cursor: 'pointer' }}
-            onClick={() => setActiveTab('queue')}
+             className={`tab-btn ${activeTab === 'queue' ? 'active' : ''}`}
+             onClick={() => setActiveTab('queue')}
           >
-            <i className="fa-solid fa-list-ol"></i> Live Queue
+            <i className="fa-solid fa-list-ol mr-2"></i> Active Queue
           </button>
           <button 
-            className="flex items-center gap-2 w-full text-left"
-            style={{ padding: '10px', borderRadius: '8px', background: activeTab === 'billing' ? 'rgba(255,255,255,0.2)' : 'transparent', color: 'white', border: 'none', cursor: 'pointer' }}
-            onClick={() => setActiveTab('billing')}
+             className={`tab-btn ${activeTab === 'doctors' ? 'active' : ''}`}
+             onClick={() => setActiveTab('doctors')}
           >
-            <i className="fa-solid fa-file-invoice-dollar"></i> Billing
+             <i className="fa-solid fa-user-doctor mr-2"></i> Doctors List
+          </button>
+          <button 
+             className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
+             onClick={() => setActiveTab('billing')}
+          >
+            <i className="fa-solid fa-file-invoice-dollar mr-2"></i> Billing Center
           </button>
         </nav>
         <LogoutButton />
@@ -640,6 +643,17 @@ export default function ReceptionDashboard() {
                     ))}
                   </select>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '5px' }}>
+                   <button 
+                     type="button" 
+                     className="btn btn-outline" 
+                     title="Refresh Doctors List"
+                     style={{ padding: '8px 12px', height: '42px' }}
+                     onClick={fetchDoctors}
+                   >
+                     <i className="fa-solid fa-sync-alt"></i>
+                   </button>
+                </div>
               </div>
 
               <div className="flex justify-between items-center mt-4">
@@ -819,6 +833,44 @@ export default function ReceptionDashboard() {
                   <tr>
                     <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       No bills found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'doctors' && (
+          <div className="glass-card animate-fade-in" style={{ width: '100%' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3>Available Doctors</h3>
+              <button className="btn btn-outline" style={{ fontSize: '12px' }} onClick={fetchDoctors}>Refresh</button>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px' }}>Doctor Name</th>
+                  <th style={{ padding: '12px' }}>Role</th>
+                  <th style={{ padding: '12px' }}>Email</th>
+                  <th style={{ padding: '12px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doctors.length > 0 ? doctors.map((doc: any) => (
+                  <tr key={doc.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{doc.name}</td>
+                    <td style={{ padding: '12px' }}>{doc.role}</td>
+                    <td style={{ padding: '12px' }}>{doc.email}</td>
+                    <td style={{ padding: '12px' }}>
+                       <span className="badge badge-success">Available</span>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No doctors registered in the system.
                     </td>
                   </tr>
                 )}

@@ -1,11 +1,39 @@
 'use client';
 import { useState, useEffect } from 'react';
 import LogoutButton from '@/components/LogoutButton';
+import { 
+  Users, 
+  IndianRupee, 
+  TrendingUp, 
+  Activity, 
+  Calendar, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  TrendingDown,
+  LayoutDashboard,
+  FileText,
+  Settings,
+  Bell
+} from 'lucide-react';
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
+  const [activeView, setActiveView] = useState<'performance' | 'doctors'>('performance');
+  const [doctorList, setDoctorList] = useState<any[]>([]);
 
   const fetchStats = async () => {
     try {
@@ -16,6 +44,16 @@ export default function AdminDashboard() {
       console.error("Failed to fetch admin stats", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    try {
+      const res = await fetch('/api/users?role=DOCTOR');
+      const data = await res.json();
+      if (data.success) setDoctorList(data.users);
+    } catch (err) {
+      console.error("Failed to fetch doctors", err);
     }
   };
 
@@ -32,133 +70,390 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchSession();
     fetchStats();
+    fetchDoctors();
   }, []);
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-light)' }}>
-        <div className="animate-spin" style={{ width: '40px', height: '40px', border: '4px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%' }}></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200"></div>
+          <div className="absolute top-0 left-0 w-12 h-12 rounded-full border-4 border-t-primary animate-spin"></div>
+        </div>
       </div>
     );
   }
 
+  const COLORS = ['#0A4D68', '#088395', '#16698b', '#05bfdb'];
+
+  // Calculate Growth Percentage
+  const calculateGrowth = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return (((current - previous) / previous) * 100).toFixed(1);
+  };
+
+  const revenueGrowth = calculateGrowth(stats?.totalCollection || 0, stats?.yesterdayCollection || 0);
+
   return (
-    <div className="flex" style={{ minHeight: '100vh' }}>
-      {/* Sidebar */}
-      <aside style={{ width: '260px', background: 'var(--primary)', color: 'white', padding: '30px 20px' }}>
-        <div className="flex items-center gap-3 mb-10">
-           <div style={{ width: '35px', height: '35px', background: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold' }}>M</div>
-           <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 700 }}>Admin Panel</h2>
+    <div className="flex min-h-screen bg-[#f8fafc] font-outfit">
+      {/* Sidebar - Enhanced Glassmorphism */}
+      <aside className="w-280 bg-primary text-white p-8 flex flex-col fixed inset-y-0 shadow-2xl z-50">
+        <div className="flex items-center gap-3 mb-12 px-2">
+           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+             M
+           </div>
+           <div>
+             <h2 className="text-xl font-bold tracking-tight">Admin</h2>
+             <span className="text-[10px] uppercase tracking-[0.2em] opacity-60">Hospital SaaS</span>
+           </div>
         </div>
-        <nav className="flex flex-col gap-4">
-          <a href="#" className="nav-item active" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', color: 'white', textDecoration: 'none' }}>
-             Report Center
-          </a>
-          <LogoutButton />
+
+        <nav className="flex flex-col gap-2 flex-grow">
+          <button 
+             onClick={() => setActiveView('performance')}
+             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'performance' ? 'bg-white-20 text-white shadow-soft font-bold' : 'text-white-60 hover:text-white hover:bg-white-5'}`}
+          >
+             <LayoutDashboard size={20} /> Performance
+          </button>
+          <button 
+             onClick={() => setActiveView('doctors')}
+             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'doctors' ? 'bg-white-20 text-white shadow-soft font-bold' : 'text-white-60 hover:text-white hover:bg-white-5'}`}
+          >
+             <Users size={20} /> Doctors List
+          </button>
+          <NavItem icon={<Activity size={20} />} label="Live Stats" />
+          <NavItem icon={<FileText size={20} />} label="Reports" />
+          <NavItem icon={<Settings size={20} />} label="Configuration" />
         </nav>
+
+        <div className="pt-8 border-t border-white-10">
+          <LogoutButton />
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px', background: 'var(--bg-light)', overflowY: 'auto' }}>
-        <header className="flex justify-between items-center mb-10">
-          <div>
-            <h1 style={{ fontSize: '28px', color: 'var(--primary)', fontWeight: 700 }}>Hello, {userName || 'Administrator'}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Here is your hospital's performance for today.</p>
+      <main className="flex-1 ml-280 p-10 overflow-y-auto">
+        {/* Header */}
+        <header className="flex justify-between items-center mb-12">
+          <div className="animate-fade-in">
+            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
+              {activeView === 'performance' ? 'System Overview' : 'Doctors Directory'}
+            </h1>
+            <p className="text-slate-500 flex items-center gap-2 mt-1">
+              <Calendar size={14} /> {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-             <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital Management</div>
+          <div className="flex items-center gap-6">
+             <div className="relative cursor-pointer hover-scale-110 transition-transform">
+               <Bell size={24} className="text-slate-400" />
+               <span className="absolute top-0 right-0 w-2 h-2 bg-accent rounded-full border-2 border-white"></span>
+             </div>
+             <div className="h-10 w-px bg-slate-200"></div>
+             <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="font-semibold text-sm text-slate-800 uppercase tracking-wide">{userName || 'Administrator'}</div>
+                  <div className="text-[11px] text-primary font-bold">Malar Hospital Thanjavur</div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center font-bold text-primary">
+                  {userName ? userName.charAt(0) : 'A'}
+                </div>
              </div>
           </div>
         </header>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-3 gap-6 mb-10">
-           <div className="glass-card" style={{ padding: '25px', borderLeft: '6px solid var(--primary)' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '10px' }}>Patients Registered Today</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--primary)' }}>{stats?.totalPatients || 0}</div>
-           </div>
-           <div className="glass-card" style={{ padding: '25px', borderLeft: '6px solid #10b981' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '10px' }}>Total Collections (Paid)</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: '#10b981' }}>₹{stats?.totalCollection?.toLocaleString() || 0}</div>
-           </div>
-           <div className="glass-card" style={{ padding: '25px', borderLeft: '6px solid #f59e0b' }}>
-              <div style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '10px' }}>Top Department</div>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: '#f59e0b' }}>
-                {stats?.breakdown && Object.keys(stats.breakdown).length > 0 
-                  ? Object.entries(stats.breakdown).sort((a: any, b: any) => b[1] - a[1])[0][0]
-                  : 'N/A'}
+        {activeView === 'performance' ? (
+          <>
+            {/* KPI Cards Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+              <StatCard 
+                  label="Today's Revenue" 
+                  value={`₹${stats?.totalCollection?.toLocaleString() || 0}`} 
+                  icon={<IndianRupee className="text-primary" />} 
+                  trend={revenueGrowth} 
+                  isPositive={parseFloat(revenueGrowth as string) >= 0}
+              />
+              <StatCard 
+                  label="Patient Registrations" 
+                  value={stats?.totalPatients || 0} 
+                  icon={<Users className="text-secondary" />} 
+                  trend={stats?.totalPatientsMonth || 0}
+                  trendLabel="this month"
+              />
+              <StatCard 
+                  label="Monthly Collection" 
+                  value={`₹${stats?.monthlyCollection?.toLocaleString() || 0}`} 
+                  icon={<TrendingUp className="text-success" />} 
+              />
+              <StatCard 
+                  label="Avg. Bill Value" 
+                  value={`₹${stats?.totalPatients > 0 ? (stats.totalCollection / stats.totalPatients).toFixed(0) : 0}`} 
+                  icon={<Activity className="text-accent" />} 
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+              {/* Revenue Trend Chart */}
+              <div className="lg:col-span-2 glass-card overflow-hidden !p-0">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white-50">
+                  <div>
+                      <h3 className="text-lg font-bold text-slate-800">Revenue Trend</h3>
+                      <p className="text-xs text-slate-500 lowercase tracking-wide">Daily collection for the last 7 days</p>
+                  </div>
+                  <div className="text-xs font-semibold px-3 py-1 bg-primary/5 text-primary rounded-full uppercase tracking-widest cursor-pointer hover:bg-primary/10 transition-colors">7 Days View</div>
+                </div>
+                <div className="p-6 h-[320px] bg-white">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={stats?.sevenDayTrend || []}>
+                        <defs>
+                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#0A4D68" stopOpacity={0.1}/>
+                            <stop offset="95%" stopColor="#0A4D68" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis 
+                          dataKey="date" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{fontSize: 10, fill: '#64748b'}} 
+                          dy={10}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{fontSize: 10, fill: '#64748b'}} 
+                          tickFormatter={(value) => `₹${value >= 1000 ? (value/1000)+'k' : value}`}
+                        />
+                        <Tooltip 
+                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
+                          formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                        />
+                        <Area type="monotone" dataKey="amount" stroke="#0A4D68" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                </div>
               </div>
-           </div>
-        </div>
 
-        <div className="flex gap-6">
-          {/* Detailed Collection Table */}
-          <div className="glass-card" style={{ flex: 2, padding: '25px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: 700 }}>Today's Collection Summary</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-               <thead>
-                  <tr style={{ background: 'var(--bg-light)', textAlign: 'left', fontSize: '13px', color: 'var(--text-muted)' }}>
-                     <th style={{ padding: '12px' }}>Patient Name</th>
-                     <th style={{ padding: '12px' }}>Type</th>
-                     <th style={{ padding: '12px' }}>Amount</th>
-                     <th style={{ padding: '12px' }}>Method</th>
-                     <th style={{ padding: '12px' }}>Time</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  {stats?.recentActivity?.length > 0 ? stats.recentActivity.map((activity: any) => (
-                    <tr key={activity.id} style={{ borderBottom: '1px solid var(--border)', fontSize: '14px' }}>
-                       <td style={{ padding: '15px 12px', fontWeight: 500 }}>{activity.patientName}</td>
-                       <td style={{ padding: '15px 12px' }}>
-                          <span className={`badge ${activity.type === 'CONSULTATION' ? 'badge-info' : 'badge-warning'}`} style={{ fontSize: '10px' }}>
-                            {activity.type}
-                          </span>
-                       </td>
-                       <td style={{ padding: '15px 12px', fontWeight: 700 }}>₹{activity.amount}</td>
-                       <td style={{ padding: '15px 12px' }}>{activity.paymentMode || 'CASH'}</td>
-                       <td style={{ padding: '15px 12px', color: 'var(--text-muted)' }}>
-                          {new Date(activity.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                       </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                       <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>No collections recorded today.</td>
-                    </tr>
-                  )}
-               </tbody>
-            </table>
-          </div>
+              {/* Department Breakdown */}
+              <div className="glass-card flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-white to-slate-50">
+                <h3 className="text-lg font-bold text-slate-800 mb-6 w-full text-left">Department Load</h3>
+                <div className="w-full h-[220px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={stats?.breakdown ? Object.entries(stats.breakdown).map(([name, value]) => ({ name, value })) : []}
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {Object.entries(stats?.breakdown || {}).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-6 w-full text-left">
+                    {Object.entries(stats?.breakdown || {}).map(([type, amount]: any, index: number) => (
+                      <div key={type} className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ background: COLORS[index % COLORS.length] }}></div>
+                          <span className="text-[10px] font-bold text-slate-500 tracking-wide uppercase">{type}</span>
+                        </div>
+                        <span className="text-sm font-bold text-slate-800 pl-4">₹{amount.toLocaleString()}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
 
-          {/* Department Breakdown */}
-          <div className="glass-card" style={{ flex: 1, padding: '25px' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: 700 }}>Fee Breakdown</h3>
-            <div className="flex flex-col gap-4">
-               {stats?.breakdown && Object.entries(stats.breakdown).map(([type, amount]: any) => (
-                 <div key={type}>
-                    <div className="flex justify-between items-center mb-1">
-                       <span style={{ fontSize: '14px', fontWeight: 500 }}>{type}</span>
-                       <span style={{ fontSize: '14px', fontWeight: 700 }}>₹{amount}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Recent Activity */}
+              <div className="lg:col-span-2 glass-card">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-lg font-bold text-slate-800">Transaction Stream</h3>
+                    <button className="text-xs font-bold text-primary hover:underline">View All</button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-100 border-collapse">
+                      <thead>
+                        <tr className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] border-b border-slate-100 pb-4">
+                          <th className="pb-4">Patient & Description</th>
+                          <th className="pb-4">Type</th>
+                          <th className="pb-4">Amount</th>
+                          <th className="pb-4">Mode</th>
+                          <th className="pb-4">Timestamp</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats?.recentActivity?.length > 0 ? stats.recentActivity.map((activity: any) => (
+                          <tr key={activity.id} className="group hover:bg-slate-50-50 transition-colors">
+                            <td className="py-4">
+                              <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
+                                    {activity.patientName.charAt(0)}
+                                  </div>
+                                  <span className="font-semibold text-slate-700">{activity.patientName}</span>
+                              </div>
+                            </td>
+                            <td className="py-4">
+                              <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
+                                activity.type === 'CONSULTATION' ? 'bg-blue-50 text-blue-600' : 
+                                activity.type === 'LAB' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {activity.type}
+                              </span>
+                            </td>
+                            <td className="py-4 font-bold text-slate-800">₹{activity.amount}</td>
+                            <td className="py-4 text-xs font-medium text-slate-500">{activity.paymentMode || 'CASH'}</td>
+                            <td className="py-4 text-xs font-medium text-slate-400">
+                              {new Date(activity.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan={5} className="py-10 text-center text-slate-400 italic">No transactions detected today.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+              </div>
+
+              {/* Quick Actions / Summary */}
+              <div className="flex flex-col gap-6">
+                  <div className="glass-card bg-primary text-white overflow-hidden relative">
+                    <div className="relative z-10">
+                        <h4 className="text-lg font-bold mb-2">Weekly Goal</h4>
+                        <p className="text-white-70 text-sm mb-6">You've reached 84% of your monthly revenue target.</p>
+                        <div className="w-full h-2 bg-white-20 rounded-full mb-2">
+                          <div className="w-[84%] h-full bg-accent rounded-full shadow-lg shadow-accent-20"></div>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
+                          <span>Progress</span>
+                          <span>84%</span>
+                        </div>
                     </div>
-                    <div style={{ width: '100%', height: '8px', background: 'var(--bg-light)', borderRadius: '4px', overflow: 'hidden' }}>
-                       <div style={{ width: `${(amount / stats.totalCollection) * 100}%`, height: '100%', background: 'var(--primary)' }}></div>
-                    </div>
-                 </div>
-               ))}
-               {(!stats?.breakdown || Object.keys(stats.breakdown).length === 0) && (
-                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: '20px' }}>No financial data yet.</p>
-               )}
+                    {/* Decorative Circle */}
+                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                  </div>
+
+                  <div className="glass-card flex flex-col gap-4">
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Efficiency Metrics</h4>
+                    <MetricRow label="Consultation Rate" value="92%" isUp={true} />
+                    <MetricRow label="Lab Conversion" value="65%" isUp={false} />
+                    <MetricRow label="Wait Time avg." value="14m" isUp={true} />
+                  </div>
+              </div>
             </div>
-            
-            <div className="mt-10 p-4" style={{ background: 'var(--primary)', borderRadius: '15px', color: 'white', textAlign: 'center' }}>
-               <div style={{ fontSize: '13px', opacity: 0.8, marginBottom: '5px' }}>Estimated Daily Projection</div>
-               <div style={{ fontSize: '20px', fontWeight: 800 }}>₹{((stats?.totalCollection || 0) * 1.5).toFixed(0)}</div>
-               <p style={{ fontSize: '10px', marginTop: '10px', opacity: 0.7 }}>Based on current registration trend.</p>
-            </div>
+          </>
+        ) : (
+          <div className="glass-card animate-fade-in">
+             <div className="flex justify-between items-center mb-10">
+                <h3 className="text-xl font-bold text-slate-800">Registered Medical Practitioners</h3>
+                <div className="flex gap-2">
+                   <button className="btn btn-primary !rounded-lg !py-2">
+                      <Users size={16} /> Add New Doctor
+                   </button>
+                </div>
+             </div>
+             <div className="overflow-x-auto">
+                <table className="w-full">
+                   <thead>
+                      <tr className="text-left text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                         <th className="pb-4 px-4">Doctor Name</th>
+                         <th className="pb-4 px-4">Role</th>
+                         <th className="pb-4 px-4">Contact Email</th>
+                         <th className="pb-4 px-4">Status</th>
+                         <th className="pb-4 px-4">Action</th>
+                      </tr>
+                   </thead>
+                   <tbody>
+                      {doctorList.map((doc) => (
+                         <tr key={doc.id} className="border-b border-slate-50 group hover:bg-slate-50-50 transition-colors">
+                            <td className="py-4 px-4">
+                               <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                                    {doc.name.charAt(3) === '.' ? doc.name.charAt(4) : doc.name.charAt(0)}
+                                  </div>
+                                  <span className="font-bold text-slate-700">{doc.name}</span>
+                               </div>
+                            </td>
+                            <td className="py-4 px-4 text-sm text-slate-500 font-medium">{doc.role}</td>
+                            <td className="py-4 px-4 text-sm text-slate-500">{doc.email}</td>
+                            <td className="py-4 px-4">
+                               <span className="badge badge-success">Active</span>
+                            </td>
+                            <td className="py-4 px-4">
+                               <button className="text-slate-400 hover:text-primary transition-colors">
+                                 <Settings size={18} />
+                               </button>
+                            </td>
+                         </tr>
+                      ))}
+                   </tbody>
+                </table>
+             </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
 }
+
+// Sub-components
+function NavItem({ icon, label, active = false }: { icon: any, label: string, active?: boolean }) {
+  return (
+    <a 
+      href="#" 
+      className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${
+        active 
+        ? 'bg-white-20 text-white shadow-soft' 
+        : 'text-white-60 hover:text-white hover:bg-white-5'
+      }`}
+    >
+      <span className={active ? 'text-white' : 'text-white/60 group-hover:text-white transition-colors'}>{icon}</span>
+      <span className="text-sm font-semibold">{label}</span>
+      {active && <div className="ml-auto w-1.5 h-1.5 bg-accent rounded-full shadow-glow"></div>}
+    </a>
+  );
+}
+
+function StatCard({ label, value, icon, trend, isPositive, trendLabel = "vs yesterday" }: any) {
+  return (
+    <div className="glass-card hover-scale-102 transition-transform duration-300">
+       <div className="flex justify-between items-start mb-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shadow-sm">
+            {icon}
+          </div>
+          {trend !== undefined && (
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
+              isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+            }`}>
+              {isPositive ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}
+              {Math.abs(trend)}% {trendLabel && <span className="text-[8px] opacity-60 ml-0.5">{trendLabel}</span>}
+            </div>
+          )}
+       </div>
+       <div className="flex flex-col">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</span>
+          <span className="text-2xl font-bold text-slate-800 leading-none">{value}</span>
+       </div>
+    </div>
+  );
+}
+
+function MetricRow({ label, value, isUp }: any) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+       <span className="text-xs font-medium text-slate-500">{label}</span>
+       <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-800">{value}</span>
+          {isUp ? <ArrowUpRight size={14} className="text-emerald-500" /> : <ArrowDownRight size={14} className="text-rose-500" />}
+       </div>
+    </div>
+  );
+}
+
