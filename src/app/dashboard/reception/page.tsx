@@ -7,6 +7,7 @@ export default function ReceptionDashboard() {
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [queue, setQueue] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
   
@@ -58,6 +59,7 @@ export default function ReceptionDashboard() {
   const [doctors, setDoctors] = useState<any[]>([]);
 
   const fetchDoctors = async () => {
+    setIsRefreshing(true);
     try {
       const res = await fetch(`/api/users?role=DOCTOR&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
@@ -69,6 +71,8 @@ export default function ReceptionDashboard() {
       }
     } catch (err) {
       console.error("Failed to fetch doctors", err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 600);
     }
   };
 
@@ -237,31 +241,31 @@ export default function ReceptionDashboard() {
     <div className="flex" style={{ minHeight: '100vh' }}>
       {/* Sidebar */}
       <aside style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px' }}>Malar HMS</h2>
-        <nav className="flex flex-col gap-4" style={{ flex: 1 }}>
+        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', marginBottom: '40px', padding: '0 10px' }}>Malar HMS</h2>
+        <nav className="flex flex-col gap-2" style={{ flex: 1 }}>
           <button 
-             className={`tab-btn ${activeTab === 'register' ? 'active' : ''}`}
+             className={`sidebar-pill ${activeTab === 'register' ? 'active' : ''}`}
              onClick={() => setActiveTab('register')}
           >
-            <i className="fa-solid fa-user-plus mr-2"></i> Register Patient
+            <i className="fa-solid fa-user-plus mr-3"></i> Register Patient
           </button>
           <button 
-             className={`tab-btn ${activeTab === 'queue' ? 'active' : ''}`}
+             className={`sidebar-pill ${activeTab === 'queue' ? 'active' : ''}`}
              onClick={() => setActiveTab('queue')}
           >
-            <i className="fa-solid fa-list-ol mr-2"></i> Active Queue
+            <i className="fa-solid fa-list-ol mr-3"></i> Active Queue
           </button>
           <button 
-             className={`tab-btn ${activeTab === 'doctors' ? 'active' : ''}`}
+             className={`sidebar-pill ${activeTab === 'doctors' ? 'active' : ''}`}
              onClick={() => setActiveTab('doctors')}
           >
-             <i className="fa-solid fa-user-doctor mr-2"></i> Doctors List
+             <i className="fa-solid fa-user-doctor mr-3"></i> Doctors List
           </button>
           <button 
-             className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
+             className={`sidebar-pill ${activeTab === 'billing' ? 'active' : ''}`}
              onClick={() => setActiveTab('billing')}
           >
-            <i className="fa-solid fa-file-invoice-dollar mr-2"></i> Billing Center
+            <i className="fa-solid fa-file-invoice-dollar mr-3"></i> Billing Center
           </button>
         </nav>
         <LogoutButton />
@@ -643,15 +647,14 @@ export default function ReceptionDashboard() {
                     ))}
                   </select>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '5px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '3px' }}>
                    <button 
                      type="button" 
-                     className="btn btn-outline" 
+                     className={`btn btn-outline btn-icon-circle ${isRefreshing ? 'animate-spin-once' : ''}`}
                      title="Refresh Doctors List"
-                     style={{ padding: '8px 12px', height: '42px' }}
                      onClick={fetchDoctors}
                    >
-                     <i className="fa-solid fa-sync-alt"></i>
+                     <i className="fa-solid fa-rotate"></i>
                    </button>
                 </div>
               </div>
