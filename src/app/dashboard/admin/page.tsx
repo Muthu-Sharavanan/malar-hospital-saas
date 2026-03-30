@@ -100,8 +100,8 @@ export default function AdminDashboard() {
       {/* Sidebar - Old Format with New Icons */}
       <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s' }}>
         <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Malar Hospital</h2>
-          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase' }}>Admin</span>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: 'white' }}>Malar Hospital</h2>
+          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'white' }}>Admin</span>
         </div>
 
         <nav style={{ padding: '30px 0', flexGrow: 1 }}>
@@ -387,7 +387,11 @@ export default function AdminDashboard() {
                             <td className="py-4 px-4">
                                <div className="flex items-center gap-3">
                                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                                    {doc.name.charAt(3) === '.' ? doc.name.charAt(4) : doc.name.charAt(0)}
+                                     {(() => {
+                                       const clean = doc.name.trim();
+                                       const nameToUse = clean.toLowerCase().startsWith('dr.') ? clean.slice(3).trim() : clean;
+                                       return nameToUse.charAt(0).toUpperCase() || '?';
+                                     })()}
                                   </div>
                                   <span className="font-bold text-slate-700">{doc.name}</span>
                                </div>
@@ -467,4 +471,3 @@ function MetricRow({ label, value, isUp }: any) {
     </div>
   );
 }
-
