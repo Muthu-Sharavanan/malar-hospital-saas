@@ -371,3 +371,100 @@ p { color: var(--text-muted); }
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* --- Mobile Sidebar Drawer --- */
+.sidebar-fixed {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 1024px) {
+  .sidebar-fixed {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+  }
+  
+  .sidebar-fixed.open {
+    left: 0;
+  }
+  
+  .content-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar-overlay.show {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* --- Mobile Utility Classes --- */
+.mobile-stack {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+@media (min-width: 768px) {
+  .mobile-stack {
+    flex-direction: row !important;
+  }
+}
+
+.responsive-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .responsive-grid-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* --- Responsive Chart Container --- */
+.chart-container {
+  width: 100%;
+  height: 300px;
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    height: 250px;
+  }
+}
+
+.hamburger-btn {
+  display: none;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 1024px) {
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

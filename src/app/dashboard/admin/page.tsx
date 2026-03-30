@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const [userName, setUserName] = useState('');
   const [activeView, setActiveView] = useState<'performance' | 'doctors'>('performance');
   const [doctorList, setDoctorList] = useState<any[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -95,29 +96,40 @@ export default function AdminDashboard() {
   const revenueGrowth = calculateGrowth(stats?.totalCollection || 0, stats?.yesterdayCollection || 0);
 
   return (
-    <div className="flex min-h-screen bg-[#f8fafc] font-outfit">
+    <div className="sidebar-container bg-[#f8fafc] font-outfit">
+      {/* Sidebar Overlay (Mobile) */}
+      <div 
+        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+
       {/* Sidebar - Enhanced Glassmorphism */}
-      <aside className="w-280 bg-primary text-white p-8 flex flex-col fixed inset-y-0 shadow-2xl z-50">
-        <div className="flex items-center gap-3 mb-12 px-2">
-           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform cursor-pointer">
-             M
+      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '260px', background: 'var(--primary)', color: 'white', padding: '30px', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex justify-between items-center mb-12 px-2">
+           <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+               M
+             </div>
+             <div>
+               <h2 className="text-xl font-bold tracking-tight">Admin</h2>
+               <span className="text-[10px] uppercase tracking-[0.2em] opacity-60">Hospital SaaS</span>
+             </div>
            </div>
-           <div>
-             <h2 className="text-xl font-bold tracking-tight">Admin</h2>
-             <span className="text-[10px] uppercase tracking-[0.2em] opacity-60">Hospital SaaS</span>
-           </div>
+           <button className="lg:hidden text-white" onClick={() => setIsSidebarOpen(false)}>
+             <i className="fa-solid fa-xmark text-xl"></i>
+           </button>
         </div>
 
         <nav className="flex flex-col gap-2 flex-grow">
           <button 
-             onClick={() => setActiveView('performance')}
-             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'performance' ? 'bg-white-20 text-white shadow-soft font-bold' : 'text-white-60 hover:text-white hover:bg-white-5'}`}
+             onClick={() => { setActiveView('performance'); setIsSidebarOpen(false); }}
+             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'performance' ? 'bg-white/20 text-white shadow-soft font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
              <LayoutDashboard size={20} /> Performance
           </button>
           <button 
-             onClick={() => setActiveView('doctors')}
-             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'doctors' ? 'bg-white-20 text-white shadow-soft font-bold' : 'text-white-60 hover:text-white hover:bg-white-5'}`}
+             onClick={() => { setActiveView('doctors'); setIsSidebarOpen(false); }}
+             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'doctors' ? 'bg-white/20 text-white shadow-soft font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
              <Users size={20} /> Doctors List
           </button>
@@ -126,29 +138,34 @@ export default function AdminDashboard() {
           <NavItem icon={<Settings size={20} />} label="Configuration" />
         </nav>
 
-        <div className="pt-8 border-t border-white-10">
+        <div className="pt-8 border-t border-white/10">
           <LogoutButton />
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-280 p-10 overflow-y-auto">
+      <main className="content-main flex-1 p-6 lg:p-10 overflow-y-auto" style={{ marginLeft: '0', transition: 'all 0.3s' }}>
         {/* Header */}
-        <header className="flex justify-between items-center mb-12">
-          <div className="animate-fade-in">
-            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-              {activeView === 'performance' ? 'System Overview' : 'Doctors Directory'}
-            </h1>
-            <p className="text-slate-500 flex items-center gap-2 mt-1">
-              <Calendar size={14} /> {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div className="flex items-center gap-4 animate-fade-in">
+            <button className="hamburger-btn lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+              <i className="fa-solid fa-bars"></i>
+            </button>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">
+                {activeView === 'performance' ? 'System Overview' : 'Doctors Directory'}
+              </h1>
+              <p className="text-slate-500 flex items-center gap-2 mt-1">
+                <Calendar size={14} /> {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-6">
-             <div className="relative cursor-pointer hover-scale-110 transition-transform">
+          <div className="flex items-center justify-between w-full md:w-auto gap-6 bg-white/50 p-3 md:p-0 rounded-2xl">
+             <div className="relative cursor-pointer hover:scale-110 transition-transform">
                <Bell size={24} className="text-slate-400" />
-               <span className="absolute top-0 right-0 w-2 h-2 bg-accent rounded-full border-2 border-white"></span>
+               <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-accent rounded-full border-2 border-white"></span>
              </div>
-             <div className="h-10 w-px bg-slate-200"></div>
+             <div className="hidden md:block h-10 w-px bg-slate-200"></div>
              <div className="flex items-center gap-3">
                 <div className="text-right">
                   <div className="font-semibold text-sm text-slate-800 uppercase tracking-wide">{userName || 'Administrator'}</div>
@@ -164,7 +181,7 @@ export default function AdminDashboard() {
         {activeView === 'performance' ? (
           <>
             {/* KPI Cards Row */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div className="responsive-grid responsive-grid-2 lg:grid-cols-4 gap-6 mb-10">
               <StatCard 
                   label="Today's Revenue" 
                   value={`₹${stats?.totalCollection?.toLocaleString() || 0}`} 
@@ -201,7 +218,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-xs font-semibold px-3 py-1 bg-primary/5 text-primary rounded-full uppercase tracking-widest cursor-pointer hover:bg-primary/10 transition-colors">7 Days View</div>
                 </div>
-                <div className="p-6 h-[320px] bg-white">
+                <div className="p-6 chart-container bg-white">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={stats?.sevenDayTrend || []}>
                         <defs>
@@ -237,7 +254,7 @@ export default function AdminDashboard() {
               {/* Department Breakdown */}
               <div className="glass-card flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-white to-slate-50">
                 <h3 className="text-lg font-bold text-slate-800 mb-6 w-full text-left">Department Load</h3>
-                <div className="w-full h-[220px]">
+                <div className="w-full chart-container">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie

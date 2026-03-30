@@ -8,6 +8,7 @@ export default function ReceptionDashboard() {
   const [shift, setShift] = useState('Morning');
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [queue, setQueue] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
   
@@ -238,32 +239,44 @@ export default function ReceptionDashboard() {
   };
 
   return (
-    <div className="flex" style={{ minHeight: '100vh' }}>
+    <div className="sidebar-container">
+      {/* Sidebar Overlay (Mobile) */}
+      <div 
+        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
+        onClick={() => setIsSidebarOpen(false)}
+      ></div>
+
       {/* Sidebar */}
-      <aside style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', marginBottom: '40px', padding: '0 10px' }}>Malar HMS</h2>
+      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex justify-between items-center mb-10 px-2">
+          <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>Malar HMS</h2>
+          <button className="lg:hidden text-white" onClick={() => setIsSidebarOpen(false)}>
+            <i className="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+        
         <nav className="flex flex-col gap-2" style={{ flex: 1 }}>
           <button 
              className={`sidebar-pill ${activeTab === 'register' ? 'active' : ''}`}
-             onClick={() => setActiveTab('register')}
+             onClick={() => { setActiveTab('register'); setIsSidebarOpen(false); }}
           >
             <i className="fa-solid fa-user-plus mr-3"></i> Register Patient
           </button>
           <button 
              className={`sidebar-pill ${activeTab === 'queue' ? 'active' : ''}`}
-             onClick={() => setActiveTab('queue')}
+             onClick={() => { setActiveTab('queue'); setIsSidebarOpen(false); }}
           >
             <i className="fa-solid fa-list-ol mr-3"></i> Active Queue
           </button>
           <button 
              className={`sidebar-pill ${activeTab === 'doctors' ? 'active' : ''}`}
-             onClick={() => setActiveTab('doctors')}
+             onClick={() => { setActiveTab('doctors'); setIsSidebarOpen(false); }}
           >
              <i className="fa-solid fa-user-doctor mr-3"></i> Doctors List
           </button>
           <button 
              className={`sidebar-pill ${activeTab === 'billing' ? 'active' : ''}`}
-             onClick={() => setActiveTab('billing')}
+             onClick={() => { setActiveTab('billing'); setIsSidebarOpen(false); }}
           >
             <i className="fa-solid fa-file-invoice-dollar mr-3"></i> Billing Center
           </button>
@@ -272,18 +285,24 @@ export default function ReceptionDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '30px', background: 'var(--bg-light)' }}>
+      <main className="content-main" style={{ flex: 1, backgroundColor: 'var(--bg-light)', padding: '30px', transition: 'all 0.3s' }}>
         <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>Welcome, {userName || 'Malar Staff'}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Reception Dashboard | {shift} Shift</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div style={{ color: 'var(--text-muted)', fontSize: '14px', background: 'white', padding: '8px 15px', borderRadius: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-              <i className="fa-solid fa-calendar-alt mr-2"></i>
-              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            </div>
-          </div>
+           <div className="flex items-center gap-4">
+             <button className="hamburger-btn lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+               <i className="fa-solid fa-bars"></i>
+             </button>
+             <div>
+               <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>Welcome, {userName || 'Malar Staff'}</h1>
+               <p style={{ color: 'var(--text-muted)' }}>Reception Dashboard | {shift} Shift</p>
+             </div>
+           </div>
+           
+           <div className="hidden md:flex items-center gap-4">
+             <div style={{ color: 'var(--text-muted)', fontSize: '14px', background: 'white', padding: '8px 15px', borderRadius: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+               <i className="fa-solid fa-calendar-alt mr-2"></i>
+               {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+             </div>
+           </div>
         </header>
 
         {showBillModal && selectedBill && (
@@ -548,10 +567,10 @@ export default function ReceptionDashboard() {
         )}
 
         {activeTab === 'register' && (
-          <div className="glass-card animate-fade-in delay-100" style={{ maxWidth: '800px' }}>
-            <div className="flex justify-between items-center mb-6">
-              <h3>New Patient Registration</h3>
-              <div style={{ position: 'relative', width: '300px' }}>
+          <div className="glass-card animate-fade-in delay-100" style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary)' }}>New Patient Registration</h2>
+              <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
                 <input 
                   type="text" 
                   className="form-input" 
@@ -563,7 +582,7 @@ export default function ReceptionDashboard() {
                   }}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
                   onFocus={() => searchQuery && setShowSearchResults(true)}
-                  style={{ paddingLeft: '35px' }}
+                  style={{ paddingLeft: '35px', width: '100%' }}
                 />
                 <i className="fa-solid fa-search" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}></i>
                 
@@ -587,86 +606,106 @@ export default function ReceptionDashboard() {
               </div>
             </div>
             
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-              <div className="flex gap-4">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Full Name</label>
-                  <input 
-                    type="text" className="form-input" placeholder="Patient Name" required 
-                    value={formData.name} onChange={e => setFormData({...formData, name: e.target.value, patientId: ''})}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-8">
+              <div className="responsive-grid responsive-grid-2">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontSize: '11px' }}>Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Patient Name"
+                    className="form-input"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Phone Number</label>
-                  <input 
-                    type="tel" className="form-input" placeholder="+91" required 
-                    value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value, patientId: ''})}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontSize: '11px' }}>Phone Number</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91"
+                    className="form-input"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   />
                 </div>
               </div>
-              
-              <div className="flex gap-4">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Age</label>
-                  <input 
-                    type="number" className="form-input" placeholder="e.g. 35" required 
-                    value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})}
+
+              <div className="responsive-grid responsive-grid-2">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontSize: '11px' }}>Age</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 35"
+                    className="form-input"
+                    value={formData.age}
+                    onChange={(e) => setFormData({...formData, age: e.target.value})}
                   />
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Gender</label>
-                  <select 
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontSize: '11px' }}>Gender</label>
+                  <select
                     className="form-input"
-                    value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
                   >
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Address</label>
-                <textarea 
-                  className="form-input" placeholder="Complete Address" rows={2}
-                  value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontSize: '11px' }}>Address</label>
+                <textarea
+                  placeholder="Complete Address"
+                  className="form-input min-h-[80px]"
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
                 ></textarea>
               </div>
 
-              <div className="flex gap-4">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Consulting Doctor</label>
-                  <select 
-                    className="form-input" required
-                    value={formData.doctorId} onChange={e => setFormData({...formData, doctorId: e.target.value})}
-                  >
-                    <option value="">Select Doctor</option>
-                    {doctors.map((doc: any) => (
-                      <option key={doc.id} value={doc.id}>{doc.name}</option>
-                    ))}
-                  </select>
+              <div className="responsive-grid responsive-grid-2 items-end">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontSize: '11px' }}>Consulting Doctor</label>
+                  <div className="flex gap-2">
+                    <select
+                      className="form-input flex-1"
+                      value={formData.doctorId}
+                      onChange={(e) => setFormData({...formData, doctorId: e.target.value})}
+                    >
+                      <option value="">Select Doctor</option>
+                      {doctors.map((doc: any) => (
+                        <option key={doc.id} value={doc.id}>Dr. {doc.name}</option>
+                      ))}
+                    </select>
+                    <button 
+                      type="button" 
+                      className={`btn btn-outline btn-icon-circle ${isRefreshing ? 'animate-spin-once' : ''}`}
+                      title="Refresh Doctors List"
+                      onClick={fetchDoctors}
+                    >
+                      <i className="fa-solid fa-rotate"></i>
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '3px' }}>
-                   <button 
-                     type="button" 
-                     className={`btn btn-outline btn-icon-circle ${isRefreshing ? 'animate-spin-once' : ''}`}
-                     title="Refresh Doctors List"
-                     onClick={fetchDoctors}
-                   >
-                     <i className="fa-solid fa-rotate"></i>
-                   </button>
+                <div className="flex flex-col gap-2">
+                  <div className="p-3 px-4 bg-orange-50 text-orange-700 rounded-lg text-sm font-bold border border-orange-100 uppercase tracking-wider text-center">
+                    OPD FEE: ₹500
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-4">
-                <div>
-                  <span className="badge badge-warning">OPD Fee: ₹500</span>
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  {loading ? "Registering..." : "Generate Token & Register"}
-                </button>
-              </div>
+              <button 
+                type="submit" 
+                className="btn btn-primary mt-4 w-full md:w-auto md:self-end text-lg py-3 px-8"
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : 'Generate Token & Register'}
+              </button>
             </form>
           </div>
         )}
