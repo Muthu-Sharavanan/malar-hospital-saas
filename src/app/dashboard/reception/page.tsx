@@ -6,6 +6,7 @@ export default function ReceptionDashboard() {
   const [activeTab, setActiveTab] = useState('register');
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -96,6 +97,18 @@ export default function ReceptionDashboard() {
       console.error("Failed to fetch bills", err);
     }
   };
+
+  useEffect(() => {
+    fetchSession();
+    fetchDoctors();
+    fetchQueue();
+    fetchBills();
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchSession = async () => {
     try {
@@ -293,8 +306,10 @@ export default function ReceptionDashboard() {
             <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>Reception Dashboard</h1>
             <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>Welcome back! Thoothukudi | Patient Registration & Tokens</p>
           </div>
-          <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68' }}>
-            SHIFT: {shift === 'morning' ? 'MORNING 08-02' : 'NIGHT 02-08'}
+          <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68', display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+            <span style={{ opacity: 0.3 }}>|</span>
+            <span>SHIFT: {shift.toUpperCase()} {shift.toLowerCase() === 'morning' ? '08:00 - 14:00' : shift.toLowerCase() === 'evening' ? '14:00 - 22:00' : '22:00 - 08:00'}</span>
           </div>
         </header>
 

@@ -32,6 +32,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
+  const [shift, setShift] = useState('Morning');
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [activeView, setActiveView] = useState<'performance' | 'doctors'>('performance');
   const [doctorList, setDoctorList] = useState<any[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -62,7 +64,10 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/me');
       const data = await res.json();
-      if (data.success) setUserName(data.user.name);
+      if (data.success) {
+        setUserName(data.user.name);
+        setShift(data.shift);
+      }
     } catch (err) {
       console.error("Failed to fetch session", err);
     }
@@ -72,6 +77,11 @@ export default function AdminDashboard() {
     fetchSession();
     fetchStats();
     fetchDoctors();
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   if (loading) {
@@ -156,6 +166,11 @@ export default function AdminDashboard() {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+            <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68', display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+              <span style={{ opacity: 0.3 }}>|</span>
+              <span>SHIFT: {shift.toUpperCase()} {shift.toLowerCase() === 'morning' ? '08:00 - 14:00' : shift.toLowerCase() === 'evening' ? '14:00 - 22:00' : '22:00 - 08:00'}</span>
+            </div>
             <div className="relative">
                <Bell size={24} style={{ color: '#94A3B8' }} />
                <span style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', background: 'var(--accent)', borderRadius: '50%', border: '2px solid white' }}></span>
