@@ -104,43 +104,44 @@ export default function AdminDashboard() {
       ></div>
 
       {/* Sidebar - Enhanced Glassmorphism */}
-      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '260px', background: 'var(--primary)', color: 'white', padding: '30px', display: 'flex', flexDirection: 'column' }}>
-        <div className="flex justify-between items-center mb-10 px-2">
-           <div className="flex items-center gap-4">
-             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary font-bold text-2xl shadow-lg transform rotate-3 hover:rotate-0 transition-all cursor-pointer">
-               M
-             </div>
-             <div>
-               <h2 className="text-xl font-bold tracking-tight text-white">Admin</h2>
-               <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">Hospital SaaS</span>
-             </div>
+      {/* Sidebar - Enhanced Glassmorphism */}
+      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '280px', background: 'var(--primary)', color: 'white', padding: '35px 25px', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 1000, transition: 'all 0.3s ease' }}>
+        <div className="flex items-center gap-4 mb-12 px-2">
+           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary font-bold text-2xl shadow-lg transform rotate-3 hover:rotate-0 transition-all cursor-pointer">
+             M
            </div>
-           <button className="lg:hidden text-white hover:text-white/80 transition-colors" onClick={() => setIsSidebarOpen(false)}>
+           <div>
+             <h2 className="text-xl font-bold tracking-tight text-white leading-tight">Admin</h2>
+             <span className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-medium">Hospital SaaS</span>
+           </div>
+           <button className="lg:hidden ml-auto text-white" onClick={() => setIsSidebarOpen(false)}>
              <i className="fa-solid fa-xmark text-xl"></i>
            </button>
         </div>
+        
+        <div className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold mb-4 px-4">Admin Menu</div>
 
-        <nav className="flex flex-col gap-2 flex-grow">
+        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto custom-scrollbar">
           <button 
              onClick={() => { setActiveView('performance'); setIsSidebarOpen(false); }}
-             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'performance' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`sidebar-pill ${activeView === 'performance' ? 'active' : ''}`}
           >
-             <LayoutDashboard size={20} className={activeView === 'performance' ? 'text-primary' : 'text-white/40 group-hover:text-white'} /> 
-             <span className="text-sm font-semibold tracking-wide">Performance</span>
+             <LayoutDashboard size={20} className="mr-3" /> 
+             <span className="text-sm font-semibold">Performance</span>
           </button>
           <button 
              onClick={() => { setActiveView('doctors'); setIsSidebarOpen(false); }}
-             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`sidebar-pill ${activeView === 'doctors' ? 'active' : ''}`}
           >
-             <Users size={20} className={activeView === 'doctors' ? 'text-primary' : 'text-white/40 group-hover:text-white'} /> 
-             <span className="text-sm font-semibold tracking-wide">Doctors List</span>
+             <Users size={20} className="mr-3" /> 
+             <span className="text-sm font-semibold">Doctors List</span>
           </button>
           <NavItem icon={<Activity size={20} />} label="Live Stats" active={false} />
           <NavItem icon={<FileText size={20} />} label="Reports" active={false} />
           <NavItem icon={<Settings size={20} />} label="Configuration" active={false} />
         </nav>
 
-        <div className="pt-8 border-t border-white/10">
+        <div className="mt-auto pt-8 border-t border-white/10">
           <LogoutButton />
         </div>
       </aside>
