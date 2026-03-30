@@ -612,7 +612,7 @@ export default function ReceptionDashboard() {
                     setSearchQuery(e.target.value);
                     fetchPatients(e.target.value);
                   }}
-                  onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+                  onBlur={() => setTimeout(() => setShowSearchResults(false), 400)}
                   onFocus={() => searchQuery && setShowSearchResults(true)}
                   style={{ paddingLeft: '45px', border: '1px solid #E2E8F0', borderRadius: '8px', height: '45px', fontSize: '15px' }}
                 />
@@ -623,7 +623,7 @@ export default function ReceptionDashboard() {
                       <div 
                         key={p.id} 
                         style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9', transition: 'background 0.2s' }}
-                        onClick={() => selectPatient(p)}
+                        onMouseDown={() => selectPatient(p)}
                         onMouseOver={(e) => e.currentTarget.style.background = '#F8FAFC'}
                         onMouseOut={(e) => e.currentTarget.style.background = 'white'}
                       >
