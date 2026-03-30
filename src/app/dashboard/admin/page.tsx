@@ -151,7 +151,7 @@ export default function AdminDashboard() {
             </h1>
             <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>
                <Calendar size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px' }} />
-               {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} | Thootukudi
+               {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} | Thoothukudi
             </p>
           </div>
           

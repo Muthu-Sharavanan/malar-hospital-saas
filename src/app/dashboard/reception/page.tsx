@@ -291,7 +291,7 @@ export default function ReceptionDashboard() {
         <header style={{ marginBottom: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>Reception Dashboard</h1>
-            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>Welcome back! Register patients and manage tokens.</p>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>Welcome back! Thoothukudi | Patient Registration & Tokens</p>
           </div>
           <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68' }}>
             SHIFT: {shift === 'morning' ? 'MORNING 08-02' : 'NIGHT 02-08'}
@@ -648,7 +648,7 @@ export default function ReceptionDashboard() {
                 >
                   <option value="">Select Doctor</option>
                   {doctors.map((doc: any) => (
-                    <option key={doc.id} value={doc.id}>Dr. {doc.name} ({doc.specialization})</option>
+                    <option key={doc.id} value={doc.id}>{doc.name.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`} ({doc.specialization})</option>
                   ))}
                 </select>
               </div>
