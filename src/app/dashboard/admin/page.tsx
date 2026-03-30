@@ -96,88 +96,79 @@ export default function AdminDashboard() {
   const revenueGrowth = calculateGrowth(stats?.totalCollection || 0, stats?.yesterdayCollection || 0);
 
   return (
-    <div className="sidebar-container bg-[#f8fafc] font-outfit">
-      {/* Sidebar Overlay (Mobile) */}
-      <div 
-        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
-        onClick={() => setIsSidebarOpen(false)}
-      ></div>
-
-      {/* Sidebar - Enhanced Glassmorphism */}
-      {/* Sidebar - Enhanced Glassmorphism */}
-      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '280px', background: 'var(--primary)', color: 'white', padding: '35px 25px', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, zIndex: 1000, transition: 'all 0.3s ease' }}>
-        <div className="flex items-center gap-4 mb-12 px-2">
-           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary font-bold text-2xl shadow-lg transform rotate-3 hover:rotate-0 transition-all cursor-pointer">
-             M
-           </div>
-           <div>
-             <h2 className="text-xl font-bold tracking-tight text-white leading-tight">Admin</h2>
-             <span className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-medium">Hospital SaaS</span>
-           </div>
-           <button className="lg:hidden ml-auto text-white" onClick={() => setIsSidebarOpen(false)}>
-             <i className="fa-solid fa-xmark text-xl"></i>
-           </button>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F2F5' }}>
+      {/* Sidebar - Old Format with New Icons */}
+      <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s' }}>
+        <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Malar Admin</h2>
+          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase' }}>Control Center</span>
         </div>
-        
-        <div className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold mb-4 px-4">Admin Menu</div>
 
-        <nav className="flex flex-col gap-2 flex-grow overflow-y-auto custom-scrollbar">
+        <nav style={{ padding: '30px 0', flexGrow: 1 }}>
           <button 
              onClick={() => { setActiveView('performance'); setIsSidebarOpen(false); }}
-             className={`sidebar-pill ${activeView === 'performance' ? 'active' : ''}`}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeView === 'performance' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
           >
-             <LayoutDashboard size={20} className="mr-3" /> 
-             <span className="text-sm font-semibold">Performance</span>
+            <LayoutDashboard size={20} style={{ opacity: activeView === 'performance' ? 1 : 0.6 }} /> 
+            <span style={{ fontWeight: activeView === 'performance' ? '600' : '400' }}>Performance</span>
           </button>
+          
           <button 
              onClick={() => { setActiveView('doctors'); setIsSidebarOpen(false); }}
-             className={`sidebar-pill ${activeView === 'doctors' ? 'active' : ''}`}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeView === 'doctors' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
           >
-             <Users size={20} className="mr-3" /> 
-             <span className="text-sm font-semibold">Doctors List</span>
+            <Users size={20} style={{ opacity: activeView === 'doctors' ? 1 : 0.6 }} /> 
+            <span style={{ fontWeight: activeView === 'doctors' ? '600' : '400' }}>Doctors List</span>
           </button>
-          <NavItem icon={<Activity size={20} />} label="Live Stats" active={false} />
-          <NavItem icon={<FileText size={20} />} label="Reports" active={false} />
-          <NavItem icon={<Settings size={20} />} label="Configuration" active={false} />
+
+          <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
+            <Activity size={20} />
+            <span>Live Stats</span>
+          </div>
+
+          <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
+            <FileText size={20} />
+            <span>Reports</span>
+          </div>
+
+          <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
+            <Settings size={20} />
+            <span>Configuration</span>
+          </div>
         </nav>
 
-        <div className="mt-auto pt-8 border-t border-white/10">
+        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <LogoutButton />
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="content-main flex-1 p-6 lg:p-10 overflow-y-auto" style={{ marginLeft: '0', transition: 'all 0.3s' }}>
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div className="flex items-center gap-4 animate-fade-in">
-            <button className="hamburger-btn lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-              <i className="fa-solid fa-bars"></i>
-            </button>
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">
-                {activeView === 'performance' ? 'System Overview' : 'Doctors Directory'}
-              </h1>
-              <p className="text-slate-500 flex items-center gap-2 mt-1">
-                <Calendar size={14} /> {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-              </p>
-            </div>
+      <main style={{ flex: 1, marginLeft: '240px', padding: '60px 80px' }}>
+        <header style={{ marginBottom: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>
+               {activeView === 'performance' ? 'System Overview' : 'Doctors Directory'}
+            </h1>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>
+               <Calendar size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px' }} />
+               {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} | Thootukudi
+            </p>
           </div>
-          <div className="flex items-center justify-between w-full md:w-auto gap-6 bg-white/50 p-3 md:p-0 rounded-2xl">
-             <div className="relative cursor-pointer hover:scale-110 transition-transform">
-               <Bell size={24} className="text-slate-400" />
-               <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-accent rounded-full border-2 border-white"></span>
-             </div>
-             <div className="hidden md:block h-10 w-px bg-slate-200"></div>
-             <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="font-semibold text-sm text-slate-800 uppercase tracking-wide">{userName || 'Administrator'}</div>
-                  <div className="text-[11px] text-primary font-bold">Malar Hospital Thoothukudi</div>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center font-bold text-primary">
-                  {userName ? userName.charAt(0) : 'A'}
-                </div>
-             </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+            <div className="relative">
+               <Bell size={24} style={{ color: '#94A3B8' }} />
+               <span style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', background: 'var(--accent)', borderRadius: '50%', border: '2px solid white' }}></span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid #E2E8F0', paddingLeft: '25px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1E293B', textTransform: 'uppercase' }}>{userName || 'Admin'}</div>
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>MALAR HOSPITAL</div>
+              </div>
+              <div style={{ width: '45px', height: '45px', background: '#F1F5F9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#0A4D68', border: '2px solid white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+                 {userName ? userName.charAt(0) : 'A'}
+              </div>
+            </div>
           </div>
         </header>
 
