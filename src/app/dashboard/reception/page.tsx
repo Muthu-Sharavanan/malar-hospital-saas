@@ -57,6 +57,7 @@ export default function ReceptionDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
   const [doctors, setDoctors] = useState<any[]>([]);
 
@@ -157,6 +158,7 @@ export default function ReceptionDashboard() {
   };
 
   const selectPatient = (patient: any) => {
+    setSelectedPatient(patient);
     setFormData({
       ...formData,
       patientId: patient.id,
@@ -169,6 +171,20 @@ export default function ReceptionDashboard() {
     setSearchQuery(patient.phone || patient.name);
     setShowSearchResults(false);
     fetchHistory(patient.id); // Show all details (history modal)
+  };
+
+  const clearPatient = () => {
+    setSelectedPatient(null);
+    setFormData({
+      patientId: '',
+      name: '',
+      phone: '',
+      age: '',
+      gender: 'Male',
+      doctorId: '',
+      address: ''
+    });
+    setSearchQuery('');
   };
 
   useEffect(() => {
@@ -202,6 +218,7 @@ export default function ReceptionDashboard() {
           uhid: data.uhid
         });
         setShowSuccessModal(true);
+        setSelectedPatient(null);
         setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '' });
         setSearchQuery('');
         setActiveTab('queue'); 
@@ -612,12 +629,39 @@ export default function ReceptionDashboard() {
                       >
                         <div style={{ fontWeight: 'bold', color: '#0A4D68' }}>{p.name} <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '400' }}>{p.uhid}</span></div>
                         <div style={{ fontSize: '12px', color: '#64748B' }}>{p.phone} | {p.age}Y | {p.gender}</div>
+                        {p.address && <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}><i className="fa-solid fa-location-dot" style={{ fontSize: '10px' }}></i> {p.address}</div>}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
+
+            {selectedPatient && (
+              <div className="animate-fade-in" style={{ background: '#F0FDFA', border: '1px solid #CCFBF1', borderRadius: '12px', padding: '20px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: '#14B8A6', color: 'white', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
+                    {selectedPatient.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <h4 style={{ margin: 0, color: '#0F172A', fontWeight: '800' }}>{selectedPatient.name}</h4>
+                      <span style={{ fontSize: '11px', background: '#14B8A6', color: 'white', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>EXISTING PATIENT</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px', display: 'flex', gap: '15px' }}>
+                      <span><strong>UHID:</strong> {selectedPatient.uhid}</span>
+                      <span><strong>PHONE:</strong> {selectedPatient.phone}</span>
+                      <span><strong>AGE/GENDER:</strong> {selectedPatient.age}Y / {selectedPatient.gender}</span>
+                    </div>
+                    {selectedPatient.address && <div style={{ fontSize: '13px', color: '#64748B', marginTop: '2px' }}><strong>ADDRESS:</strong> {selectedPatient.address}</div>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                   <button type="button" onClick={() => fetchHistory(selectedPatient.id)} style={{ background: 'white', border: '1px solid #14B8A6', color: '#14B8A6', padding: '8px 15px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>View History</button>
+                   <button type="button" onClick={clearPatient} style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }} title="Clear Selection"><i className="fa-solid fa-times"></i></button>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
               <div className="form-group">
