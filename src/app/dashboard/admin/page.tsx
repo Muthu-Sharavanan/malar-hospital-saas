@@ -105,37 +105,39 @@ export default function AdminDashboard() {
 
       {/* Sidebar - Enhanced Glassmorphism */}
       <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '260px', background: 'var(--primary)', color: 'white', padding: '30px', display: 'flex', flexDirection: 'column' }}>
-        <div className="flex flex-col items-center mb-12 relative">
-           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-primary font-bold text-2xl shadow-lg mb-4 transform hover:scale-105 transition-transform cursor-pointer">
-             M
+        <div className="flex justify-between items-center mb-10 px-2">
+           <div className="flex items-center gap-4">
+             <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary font-bold text-2xl shadow-lg transform rotate-3 hover:rotate-0 transition-all cursor-pointer">
+               M
+             </div>
+             <div>
+               <h2 className="text-xl font-bold tracking-tight text-white">Admin</h2>
+               <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">Hospital SaaS</span>
+             </div>
            </div>
-           <div className="text-center">
-             <h2 className="text-sm uppercase tracking-[0.3em] font-bold text-white/90">Hospital SaaS</h2>
-             <span className="text-[9px] uppercase tracking-[0.1em] text-white/50">Modern Healthcare System</span>
-           </div>
-           <button className="lg:hidden absolute top-0 -right-4 text-white" onClick={() => setIsSidebarOpen(false)}>
+           <button className="lg:hidden text-white hover:text-white/80 transition-colors" onClick={() => setIsSidebarOpen(false)}>
              <i className="fa-solid fa-xmark text-xl"></i>
            </button>
         </div>
 
-        <nav className="flex flex-col gap-3 flex-grow">
+        <nav className="flex flex-col gap-2 flex-grow">
           <button 
              onClick={() => { setActiveView('performance'); setIsSidebarOpen(false); }}
-             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'performance' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'performance' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
           >
              <LayoutDashboard size={20} className={activeView === 'performance' ? 'text-primary' : 'text-white/40 group-hover:text-white'} /> 
              <span className="text-sm font-semibold tracking-wide">Performance</span>
           </button>
           <button 
              onClick={() => { setActiveView('doctors'); setIsSidebarOpen(false); }}
-             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
           >
              <Users size={20} className={activeView === 'doctors' ? 'text-primary' : 'text-white/40 group-hover:text-white'} /> 
              <span className="text-sm font-semibold tracking-wide">Doctors List</span>
           </button>
-          <NavItem icon={<Activity size={20} />} label="Live Stats" />
-          <NavItem icon={<FileText size={20} />} label="Reports" />
-          <NavItem icon={<Settings size={20} />} label="Configuration" />
+          <NavItem icon={<Activity size={20} />} label="Live Stats" active={false} />
+          <NavItem icon={<FileText size={20} />} label="Reports" active={false} />
+          <NavItem icon={<Settings size={20} />} label="Configuration" active={false} />
         </nav>
 
         <div className="pt-8 border-t border-white/10">
@@ -169,7 +171,7 @@ export default function AdminDashboard() {
              <div className="flex items-center gap-3">
                 <div className="text-right">
                   <div className="font-semibold text-sm text-slate-800 uppercase tracking-wide">{userName || 'Administrator'}</div>
-                  <div className="text-[11px] text-primary font-bold">Malar Hospital Thanjavur</div>
+                  <div className="text-[11px] text-primary font-bold">Malar Hospital Thoothukudi</div>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center font-bold text-primary">
                   {userName ? userName.charAt(0) : 'A'}
@@ -425,7 +427,7 @@ function NavItem({ icon, label, active = false }: { icon: any, label: string, ac
   return (
     <a 
       href="#" 
-      className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${
+      className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${
         active 
         ? 'bg-white text-primary shadow-lg font-bold' 
         : 'text-white/60 hover:text-white hover:bg-white/10'
@@ -433,7 +435,7 @@ function NavItem({ icon, label, active = false }: { icon: any, label: string, ac
     >
       <span className={active ? 'text-primary' : 'text-white/40 group-hover:text-white transition-colors'}>{icon}</span>
       <span className="text-sm font-semibold tracking-wide">{label}</span>
-      {active && <div className="absolute right-4 w-1.5 h-1.5 bg-primary rounded-full"></div>}
+      {active && <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full"></div>}
     </a>
   );
 }

@@ -247,44 +247,46 @@ export default function ReceptionDashboard() {
       ></div>
 
       {/* Sidebar */}
-      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '30px', display: 'flex', flexDirection: 'column' }}>
-        <div className="flex flex-col items-center mb-12 relative text-center">
-           <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-primary font-bold text-3xl shadow-xl mb-6 transform hover:scale-105 transition-transform cursor-pointer border-4 border-primary/5">
-             M
+      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '25px', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex justify-between items-center mb-10 px-2">
+           <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform cursor-pointer">
+               M
+             </div>
+             <div>
+               <h2 className="text-xl font-bold tracking-tight text-white">Malar</h2>
+               <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">Hospital SaaS</span>
+             </div>
            </div>
-           <div className="group">
-             <h2 className="text-sm uppercase tracking-[0.4em] font-black text-white px-4 py-1.5 border-y border-white/10 mb-2">Hospital SaaS</h2>
-             <span className="text-[10px] uppercase tracking-[0.15em] text-cyan-200/60 font-medium">Reception Management</span>
-           </div>
-           <button className="lg:hidden absolute top-0 -right-4 text-white" onClick={() => setIsSidebarOpen(false)}>
+           <button className="lg:hidden text-white" onClick={() => setIsSidebarOpen(false)}>
              <i className="fa-solid fa-xmark text-xl"></i>
            </button>
         </div>
         
-        <nav className="flex flex-col gap-3 flex-grow">
+        <nav className="flex flex-col gap-2 flex-grow">
           <button 
-             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'register' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'register' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('register'); setIsSidebarOpen(false); }}
           >
             <i className={`fa-solid fa-user-plus ${activeTab === 'register' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
             <span className="text-sm font-semibold tracking-wide">Register Patient</span>
           </button>
           <button 
-             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'queue' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'queue' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('queue'); setIsSidebarOpen(false); }}
           >
             <i className={`fa-solid fa-list-ol ${activeTab === 'queue' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
             <span className="text-sm font-semibold tracking-wide">Active Queue</span>
           </button>
           <button 
-             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('doctors'); setIsSidebarOpen(false); }}
           >
              <i className={`fa-solid fa-user-doctor ${activeTab === 'doctors' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
              <span className="text-sm font-semibold tracking-wide">Doctors List</span>
           </button>
           <button 
-             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'billing' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+             className={`flex items-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'billing' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('billing'); setIsSidebarOpen(false); }}
           >
             <i className={`fa-solid fa-file-invoice-dollar ${activeTab === 'billing' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
