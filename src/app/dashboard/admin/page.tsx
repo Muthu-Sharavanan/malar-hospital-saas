@@ -169,7 +169,12 @@ export default function AdminDashboard() {
             <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68', display: 'flex', alignItems: 'center', gap: '15px' }}>
               <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
               <span style={{ opacity: 0.3 }}>|</span>
-              <span>SHIFT: {shift.toUpperCase()} {shift.toLowerCase() === 'morning' ? '08:00 - 14:00' : shift.toLowerCase() === 'evening' ? '14:00 - 22:00' : '22:00 - 08:00'}</span>
+              <span>{(() => {
+                const hour = currentTime.getHours();
+                if (hour >= 6 && hour < 14) return 'MORNING SHIFT';
+                if (hour >= 14 && hour < 22) return 'EVENING SHIFT';
+                return 'NIGHT SHIFT';
+              })()}</span>
             </div>
             <div className="relative">
                <Bell size={24} style={{ color: '#94A3B8' }} />
