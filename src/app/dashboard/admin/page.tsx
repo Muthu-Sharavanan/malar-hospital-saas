@@ -100,8 +100,8 @@ export default function AdminDashboard() {
       {/* Sidebar - Old Format with New Icons */}
       <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s' }}>
         <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Malar Admin</h2>
-          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase' }}>Control Center</span>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Malar Hospital</h2>
+          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase' }}>Admin</span>
         </div>
 
         <nav style={{ padding: '30px 0', flexGrow: 1 }}>
