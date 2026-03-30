@@ -247,38 +247,48 @@ export default function ReceptionDashboard() {
       ></div>
 
       {/* Sidebar */}
-      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <div className="flex justify-between items-center mb-10 px-2">
-          <h2 style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>Malar HMS</h2>
-          <button className="lg:hidden text-white" onClick={() => setIsSidebarOpen(false)}>
-            <i className="fa-solid fa-xmark text-xl"></i>
-          </button>
+      <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '30px', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex flex-col items-center mb-12 relative text-center">
+           <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-primary font-bold text-3xl shadow-xl mb-6 transform hover:scale-105 transition-transform cursor-pointer border-4 border-primary/5">
+             M
+           </div>
+           <div className="group">
+             <h2 className="text-sm uppercase tracking-[0.4em] font-black text-white px-4 py-1.5 border-y border-white/10 mb-2">Hospital SaaS</h2>
+             <span className="text-[10px] uppercase tracking-[0.15em] text-cyan-200/60 font-medium">Reception Management</span>
+           </div>
+           <button className="lg:hidden absolute top-0 -right-4 text-white" onClick={() => setIsSidebarOpen(false)}>
+             <i className="fa-solid fa-xmark text-xl"></i>
+           </button>
         </div>
         
-        <nav className="flex flex-col gap-2" style={{ flex: 1 }}>
+        <nav className="flex flex-col gap-3 flex-grow">
           <button 
-             className={`sidebar-pill ${activeTab === 'register' ? 'active' : ''}`}
+             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'register' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('register'); setIsSidebarOpen(false); }}
           >
-            <i className="fa-solid fa-user-plus mr-3"></i> Register Patient
+            <i className={`fa-solid fa-user-plus ${activeTab === 'register' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
+            <span className="text-sm font-semibold tracking-wide">Register Patient</span>
           </button>
           <button 
-             className={`sidebar-pill ${activeTab === 'queue' ? 'active' : ''}`}
+             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'queue' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('queue'); setIsSidebarOpen(false); }}
           >
-            <i className="fa-solid fa-list-ol mr-3"></i> Active Queue
+            <i className={`fa-solid fa-list-ol ${activeTab === 'queue' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
+            <span className="text-sm font-semibold tracking-wide">Active Queue</span>
           </button>
           <button 
-             className={`sidebar-pill ${activeTab === 'doctors' ? 'active' : ''}`}
+             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('doctors'); setIsSidebarOpen(false); }}
           >
-             <i className="fa-solid fa-user-doctor mr-3"></i> Doctors List
+             <i className={`fa-solid fa-user-doctor ${activeTab === 'doctors' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
+             <span className="text-sm font-semibold tracking-wide">Doctors List</span>
           </button>
           <button 
-             className={`sidebar-pill ${activeTab === 'billing' ? 'active' : ''}`}
+             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeTab === 'billing' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
              onClick={() => { setActiveTab('billing'); setIsSidebarOpen(false); }}
           >
-            <i className="fa-solid fa-file-invoice-dollar mr-3"></i> Billing Center
+            <i className={`fa-solid fa-file-invoice-dollar ${activeTab === 'billing' ? 'text-primary' : 'text-white/40 group-hover:text-white'}`}></i> 
+            <span className="text-sm font-semibold tracking-wide">Billing Center</span>
           </button>
         </nav>
         <LogoutButton />
@@ -476,12 +486,12 @@ export default function ReceptionDashboard() {
               </div>
               <h3 style={{ marginBottom: '10px' }}>Patient Already Exists</h3>
               <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
-                <strong>{duplicateInfo.name}</strong> is already registered in our system.
+                <strong>{duplicateInfo?.name}</strong> is already registered in our system.
               </p>
               
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
                 <span style={{ fontSize: '12px', textTransform: 'uppercase', display: 'block', color: 'var(--text-muted)' }}>Existing Patient ID</span>
-                <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent)' }}>{duplicateInfo.uhid}</span>
+                <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent)' }}>{duplicateInfo?.uhid}</span>
               </div>
 
               <p style={{ fontSize: '13px', marginBottom: '20px', color: 'var(--text-muted)' }}>
@@ -501,13 +511,13 @@ export default function ReceptionDashboard() {
               <div style={{ fontSize: '50px', color: '#10b981', marginBottom: '20px' }}>
                  <i className="fa-solid fa-circle-check"></i>
               </div>
-              <h2 style={{ marginBottom: '10px' }}>{successInfo.title}</h2>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '25px' }}>{successInfo.message}</p>
+              <h2 style={{ marginBottom: '10px' }}>{successInfo?.title}</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '25px' }}>{successInfo?.message}</p>
               
               <div style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '20px', marginBottom: '25px' }}>
                  <div style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '5px' }}>Token assigned</div>
-                 <div style={{ fontSize: '36px', fontWeight: 'bold' }}>#{successInfo.token}</div>
-                 {successInfo.uhid && (
+                 <div style={{ fontSize: '36px', fontWeight: 'bold' }}>#{successInfo?.token}</div>
+                 {successInfo?.uhid && (
                    <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
                       <div style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '5px' }}>Patient ID (Lifelong)</div>
                       <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--primary)' }}>{successInfo.uhid}</div>
@@ -526,11 +536,11 @@ export default function ReceptionDashboard() {
           <div className="modal-overlay">
             <div className="glass-card modal-content" style={{ width: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
                <div className="flex justify-between items-center mb-4">
-                  <h3>Patient History: {historyData.patient.name}</h3>
+                  <h3>Patient History: {historyData?.patient?.name}</h3>
                   <button className="btn btn-outline" style={{ padding: '5px 10px' }} onClick={() => setShowHistoryModal(false)}>Close</button>
                </div>
                <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginBottom: '20px', fontSize: '13px' }}>
-                  <strong>UHID:</strong> {historyData.patient.uhid} | <strong>Phone:</strong> {historyData.patient.phone} | <strong>Age/Gender:</strong> {historyData.patient.age}Y, {historyData.patient.gender}
+                  <strong>UHID:</strong> {historyData?.patient?.uhid} | <strong>Phone:</strong> {historyData?.patient?.phone} | <strong>Age/Gender:</strong> {historyData?.patient?.age}Y, {historyData?.patient?.gender}
                </div>
 
                {historyData.history.length === 0 ? (

@@ -105,33 +105,33 @@ export default function AdminDashboard() {
 
       {/* Sidebar - Enhanced Glassmorphism */}
       <aside className={`sidebar-fixed ${isSidebarOpen ? 'open' : ''}`} style={{ width: '260px', background: 'var(--primary)', color: 'white', padding: '30px', display: 'flex', flexDirection: 'column' }}>
-        <div className="flex justify-between items-center mb-12 px-2">
-           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg transform rotate-3 hover:rotate-0 transition-transform cursor-pointer">
-               M
-             </div>
-             <div>
-               <h2 className="text-xl font-bold tracking-tight">Admin</h2>
-               <span className="text-[10px] uppercase tracking-[0.2em] opacity-60">Hospital SaaS</span>
-             </div>
+        <div className="flex flex-col items-center mb-12 relative">
+           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-primary font-bold text-2xl shadow-lg mb-4 transform hover:scale-105 transition-transform cursor-pointer">
+             M
            </div>
-           <button className="lg:hidden text-white" onClick={() => setIsSidebarOpen(false)}>
+           <div className="text-center">
+             <h2 className="text-sm uppercase tracking-[0.3em] font-bold text-white/90">Hospital SaaS</h2>
+             <span className="text-[9px] uppercase tracking-[0.1em] text-white/50">Modern Healthcare System</span>
+           </div>
+           <button className="lg:hidden absolute top-0 -right-4 text-white" onClick={() => setIsSidebarOpen(false)}>
              <i className="fa-solid fa-xmark text-xl"></i>
            </button>
         </div>
 
-        <nav className="flex flex-col gap-2 flex-grow">
+        <nav className="flex flex-col gap-3 flex-grow">
           <button 
              onClick={() => { setActiveView('performance'); setIsSidebarOpen(false); }}
-             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'performance' ? 'bg-white/20 text-white shadow-soft font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'performance' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
           >
-             <LayoutDashboard size={20} /> Performance
+             <LayoutDashboard size={20} className={activeView === 'performance' ? 'text-primary' : 'text-white/40 group-hover:text-white'} /> 
+             <span className="text-sm font-semibold tracking-wide">Performance</span>
           </button>
           <button 
              onClick={() => { setActiveView('doctors'); setIsSidebarOpen(false); }}
-             className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${activeView === 'doctors' ? 'bg-white/20 text-white shadow-soft font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+             className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${activeView === 'doctors' ? 'bg-white text-primary shadow-lg font-bold' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
           >
-             <Users size={20} /> Doctors List
+             <Users size={20} className={activeView === 'doctors' ? 'text-primary' : 'text-white/40 group-hover:text-white'} /> 
+             <span className="text-sm font-semibold tracking-wide">Doctors List</span>
           </button>
           <NavItem icon={<Activity size={20} />} label="Live Stats" />
           <NavItem icon={<FileText size={20} />} label="Reports" />
@@ -425,15 +425,15 @@ function NavItem({ icon, label, active = false }: { icon: any, label: string, ac
   return (
     <a 
       href="#" 
-      className={`flex items-center gap-3 p-3 rounded-xl transition-all group ${
+      className={`flex items-center justify-center gap-3 p-3.5 rounded-2xl transition-all group ${
         active 
-        ? 'bg-white-20 text-white shadow-soft' 
-        : 'text-white-60 hover:text-white hover:bg-white-5'
+        ? 'bg-white text-primary shadow-lg font-bold' 
+        : 'text-white/60 hover:text-white hover:bg-white/10'
       }`}
     >
-      <span className={active ? 'text-white' : 'text-white/60 group-hover:text-white transition-colors'}>{icon}</span>
-      <span className="text-sm font-semibold">{label}</span>
-      {active && <div className="ml-auto w-1.5 h-1.5 bg-accent rounded-full shadow-glow"></div>}
+      <span className={active ? 'text-primary' : 'text-white/40 group-hover:text-white transition-colors'}>{icon}</span>
+      <span className="text-sm font-semibold tracking-wide">{label}</span>
+      {active && <div className="absolute right-4 w-1.5 h-1.5 bg-primary rounded-full"></div>}
     </a>
   );
 }
