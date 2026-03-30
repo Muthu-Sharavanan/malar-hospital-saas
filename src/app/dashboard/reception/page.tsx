@@ -170,7 +170,6 @@ export default function ReceptionDashboard() {
     });
     setSearchQuery(patient.phone || patient.name);
     setShowSearchResults(false);
-    fetchHistory(patient.id); // Show all details (history modal)
   };
 
   const clearPatient = () => {
