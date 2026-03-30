@@ -408,12 +408,11 @@ export default function AdminDashboard() {
                                <div className="flex items-center gap-3">
                                   <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
                                      {(() => {
-                                       const clean = doc.name.trim();
-                                       const nameToUse = clean.toLowerCase().startsWith('dr.') ? clean.slice(3).trim() : clean;
+                                      const nameToUse = doc.name.trim().replace(/^dr\.?\s*/i, '');
                                        return nameToUse.charAt(0).toUpperCase() || '?';
                                      })()}
                                   </div>
-                                  <span className="font-bold text-slate-700">{doc.name}</span>
+                                  <span className="font-bold text-slate-700">{`Dr. ${doc.name.trim().replace(/^dr\.?\s*/i, '')}`}</span>
                                </div>
                             </td>
                             <td className="py-4 px-4 text-sm text-slate-500 font-medium">{doc.role}</td>

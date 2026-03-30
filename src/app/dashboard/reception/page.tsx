@@ -669,8 +669,8 @@ export default function ReceptionDashboard() {
                 >
                   <option value="">Select Doctor</option>
                   {doctors.map((doc: any) => {
-                    const cleanName = doc.name.trim();
-                    const displayName = cleanName.toLowerCase().startsWith('dr.') ? cleanName : `Dr. ${cleanName}`;
+                    const cleanName = doc.name.trim().replace(/^dr\.?\s*/i, '');
+                    const displayName = `Dr. ${cleanName}`;
                     return (
                       <option key={doc.id} value={doc.id}>
                         {displayName}{doc.specialization?.trim() ? ` (${doc.specialization.trim()})` : ''}
