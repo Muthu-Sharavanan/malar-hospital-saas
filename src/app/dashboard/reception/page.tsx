@@ -555,7 +555,7 @@ export default function ReceptionDashboard() {
                       <div key={v.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '15px', background: 'white' }}>
                          <div className="flex justify-between items-center mb-2" style={{ borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
                            <span style={{ fontWeight: 'bold' }}>{new Date(v.visitDate).toLocaleDateString()}</span>
-                           <span className="badge badge-primary">Dr. {v.doctor.name}</span>
+                           <span className="badge badge-primary">Dr. {v.doctor.name.trim().replace(/^dr\.?\s*/i, '')}</span>
                          </div>
                          <div style={{ fontSize: '13px', marginTop: '10px' }}>
                            {v.diagnosis && <p><strong>Diagnosis:</strong> {v.diagnosis}</p>}
