@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import LogoutButton from '@/components/LogoutButton';
 import { 
   Users, 
@@ -13,7 +13,11 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
-  Bell
+  Bell,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  UserSquare2
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -34,9 +38,17 @@ export default function AdminDashboard() {
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [activeView, setActiveView] = useState<'performance' | 'doctors'>('performance');
+  const [activeView, setActiveView] = useState<'performance' | 'doctors' | 'patients'>('performance');
   const [doctorList, setDoctorList] = useState<any[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Patient Records State
+  const [patientList, setPatientList] = useState<any[]>([]);
+  const [patientTotal, setPatientTotal] = useState(0);
+  const [patientPage, setPatientPage] = useState(1);
+  const [patientTotalPages, setPatientTotalPages] = useState(1);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [patientLoading, setPatientLoading] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -59,6 +71,24 @@ export default function AdminDashboard() {
       console.error("Failed to fetch doctors", err);
     }
   };
+
+  const fetchPatientRecords = useCallback(async (page = 1, search = '') => {
+    setPatientLoading(true);
+    try {
+      const res = await fetch(`/api/patients?all=true&page=${page}&q=${encodeURIComponent(search)}`);
+      const data = await res.json();
+      if (data.success) {
+        setPatientList(data.patients);
+        setPatientTotal(data.total);
+        setPatientPage(data.page);
+        setPatientTotalPages(data.totalPages);
+      }
+    } catch (err) {
+      console.error('Failed to fetch patients', err);
+    } finally {
+      setPatientLoading(false);
+    }
+  }, []);
 
   const fetchSession = async () => {
     try {
@@ -83,6 +113,12 @@ export default function AdminDashboard() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (activeView === 'patients') {
+      fetchPatientRecords(1, patientSearch);
+    }
+  }, [activeView]);
 
   if (loading) {
     return (
@@ -131,10 +167,13 @@ export default function AdminDashboard() {
             <span style={{ fontWeight: activeView === 'doctors' ? '600' : '400' }}>Doctors List</span>
           </button>
 
-          <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
-            <Activity size={20} />
-            <span>Live Stats</span>
-          </div>
+          <button 
+             onClick={() => { setActiveView('patients'); setIsSidebarOpen(false); }}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeView === 'patients' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <UserSquare2 size={20} style={{ opacity: activeView === 'patients' ? 1 : 0.6 }} /> 
+            <span style={{ fontWeight: activeView === 'patients' ? '600' : '400' }}>Patient Records</span>
+          </button>
 
           <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
             <FileText size={20} />
@@ -157,7 +196,7 @@ export default function AdminDashboard() {
         <header style={{ marginBottom: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>
-               {activeView === 'performance' ? 'System Overview' : 'Doctors Directory'}
+               {activeView === 'performance' ? 'System Overview' : activeView === 'doctors' ? 'Doctors Directory' : 'Patient Records'}
             </h1>
             <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>
                <Calendar size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px' }} />
@@ -380,7 +419,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           </>
-        ) : (
+        ) : activeView === 'doctors' ? (
           <div className="glass-card animate-fade-in">
              <div className="flex justify-between items-center mb-10">
                 <h3 className="text-xl font-bold text-slate-800">Registered Medical Practitioners</h3>
@@ -430,6 +469,112 @@ export default function AdminDashboard() {
                    </tbody>
                 </table>
              </div>
+          </div>
+        ) : (
+          /* ── Patient Records Panel ── */
+          <div className="glass-card animate-fade-in">
+            {/* Header + Search */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
+                <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
+              </div>
+              <div className="relative w-full sm:w-72">
+                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <input
+                  type="text"
+                  placeholder="Search name, phone, UHID..."
+                  value={patientSearch}
+                  onChange={e => {
+                    setPatientSearch(e.target.value);
+                    fetchPatientRecords(1, e.target.value);
+                  }}
+                  style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B' }}
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                    <th className="pb-3 px-3">UHID</th>
+                    <th className="pb-3 px-3">Patient Name</th>
+                    <th className="pb-3 px-3">Age / Gender</th>
+                    <th className="pb-3 px-3">Phone</th>
+                    <th className="pb-3 px-3">Address</th>
+                    <th className="pb-3 px-3">Visits</th>
+                    <th className="pb-3 px-3">Registered On</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {patientLoading ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-slate-400 italic">Loading patients...</td>
+                    </tr>
+                  ) : patientList.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-slate-400 italic">No patients found.</td>
+                    </tr>
+                  ) : patientList.map((p: any) => (
+                    <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                      <td className="py-3 px-3">
+                        <span style={{ fontFamily: 'monospace', fontSize: '12px', background: '#EFF6FF', color: '#1D4ED8', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                          {p.uhid}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#0A4D68', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', flexShrink: 0 }}>
+                            {p.name.charAt(0)}
+                          </div>
+                          <span className="font-semibold text-slate-700 text-sm">{p.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-sm text-slate-600">{p.age}Y &nbsp;/&nbsp; {p.gender}</td>
+                      <td className="py-3 px-3 text-sm text-slate-600">{p.phone || <span className="text-slate-300 italic">—</span>}</td>
+                      <td className="py-3 px-3 text-sm text-slate-500" style={{ maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.address || <span className="text-slate-300 italic">—</span>}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span style={{ background: p._count.visits > 0 ? '#F0FDF4' : '#F8FAFC', color: p._count.visits > 0 ? '#15803D' : '#94A3B8', padding: '2px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>
+                          {p._count.visits} visit{p._count.visits !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-xs text-slate-400">
+                        {new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {patientTotalPages > 1 && (
+              <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-100">
+                <span className="text-xs text-slate-400">
+                  Page {patientPage} of {patientTotalPages} &nbsp;·&nbsp; {patientTotal} total patients
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { const p = patientPage - 1; setPatientPage(p); fetchPatientRecords(p, patientSearch); }}
+                    disabled={patientPage <= 1}
+                    style={{ padding: '6px 10px', border: '1px solid #E2E8F0', borderRadius: '6px', background: 'white', cursor: patientPage <= 1 ? 'not-allowed' : 'pointer', opacity: patientPage <= 1 ? 0.4 : 1 }}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => { const p = patientPage + 1; setPatientPage(p); fetchPatientRecords(p, patientSearch); }}
+                    disabled={patientPage >= patientTotalPages}
+                    style={{ padding: '6px 10px', border: '1px solid #E2E8F0', borderRadius: '6px', background: 'white', cursor: patientPage >= patientTotalPages ? 'not-allowed' : 'pointer', opacity: patientPage >= patientTotalPages ? 0.4 : 1 }}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
