@@ -93,7 +93,7 @@ export default function DoctorDashboard() {
 
   const fetchDoctorQueue = async () => {
     try {
-      const res = await fetch('/api/consultation');
+      const res = await fetch(`/api/consultation?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) setQueue(data.queue);
     } catch (err) {
