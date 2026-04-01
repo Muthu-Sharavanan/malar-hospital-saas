@@ -54,10 +54,7 @@ export async function GET(req: Request) {
     }
 
     const session = JSON.parse(sessionCookie.value);
-    const sessionName = session.name || '';
-    
-    // Clean name for exact matching: remove "Dr." prefix, trim, lowercase
-    const cleanSearch = sessionName.toLowerCase().trim().replace(/^(dr\.?\s*)+/, '');
+    const sessionName = (session.name || '').toLowerCase().trim().replace(/^(dr\.?\s*)+/, '');
 
     // Filter patients where assignedDoctorName matches OR doctor record matches
     const doctorsQueue = await prisma.visit.findMany({
@@ -65,14 +62,14 @@ export async function GET(req: Request) {
         OR: [
           {
             assignedDoctorName: {
-              contains: cleanSearch,
+              contains: sessionName,
               mode: 'insensitive'
             }
           },
           {
             doctor: {
               name: {
-                contains: cleanSearch,
+                contains: sessionName,
                 mode: 'insensitive'
               }
             }
