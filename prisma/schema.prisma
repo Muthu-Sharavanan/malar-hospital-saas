@@ -12,7 +12,7 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   name      String
-  email     String   @unique
+  email     String
   password  String
   role      String   // ADMIN, DOCTOR, NURSE, RECEPTIONIST, PHARMACIST, LAB_TECH
   surgeries Surgery[] @relation("Surgeon")
@@ -20,6 +20,8 @@ model User {
   updatedAt DateTime @updatedAt
   visitsConsulted Visit[] @relation("DoctorVisits")
   authorizedBills Bill[]  @relation("BillAuthorizer")
+
+  @@index([email])
 }
 
 model Patient {
@@ -46,6 +48,7 @@ model Visit {
   tokenNumber   Int
   doctorId      String
   doctor        User     @relation("DoctorVisits", fields: [doctorId], references: [id])
+  assignedDoctorName String?
   visitDate     DateTime @default(now())
   status        String   // REGISTERED, VITALS_DONE, CONSULTING, COMPLETED
   
