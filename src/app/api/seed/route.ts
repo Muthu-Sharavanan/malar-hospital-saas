@@ -15,25 +15,20 @@ export async function GET(req: Request) {
       { name: 'Admin Admin', email: 'admin@malar.com', password: 'password123', role: 'ADMIN' },
     ];
 
-    // Clean up old doctor email if still present
+    // AGGRESSIVE CLEANUP: Delete any account with the old email or name variations
     await prisma.user.deleteMany({
-      where: { email: 'doctor@malar.com' }
+      where: {
+        OR: [
+          { email: 'doctor@malar.com' },
+          { name: { contains: 'Ramasamy', mode: 'insensitive' } },
+          { name: { contains: 'Ramaswamy', mode: 'insensitive' } }
+        ]
+      }
     });
 
+    // Create the fresh doctor accounts and others
     for (const user of users) {
-      // Find by name first to allow email updates
-      const existingUser = await prisma.user.findFirst({
-        where: { name: user.name }
-      });
-
-      if (existingUser) {
-        await prisma.user.update({
-          where: { id: existingUser.id },
-          data: { email: user.email, password: user.password }
-        });
-      } else {
-        await prisma.user.create({ data: user });
-      }
+      await prisma.user.create({ data: user });
     }
 
     return NextResponse.json({ 
