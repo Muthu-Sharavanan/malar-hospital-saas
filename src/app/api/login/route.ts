@@ -6,39 +6,41 @@ export async function POST(req: Request) {
   try {
     const { email, password, customName } = await req.json();
 
-    const userByEmail = await prisma.user.findFirst({ where: { email } });
-    if (!userByEmail) {
+    // 1. Find user by email first
+    const user = await prisma.user.findFirst({ where: { email } });
+    
+    if (!user) {
        return NextResponse.json({ success: false, error: "Email address not found" }, { status: 401 });
     }
 
-    const cleanedSearch = customName ? customName.toLowerCase().trim().replace(/^(dr\.?\s*)+/, '') : null;
-    const user = await prisma.user.findFirst({
-      where: { 
-        email,
-        name: cleanedSearch ? {
-          contains: cleanedSearch,
-          mode: 'insensitive'
-        } : undefined
-      }
-    });
-
-    if (!user) {
-       return NextResponse.json({ success: false, error: `Name "${customName}" not found for this email` }, { status: 401 });
+    // 2. Check Password
+    if (user.password !== password) {
+       return NextResponse.json({ success: false, error: "Incorrect password" }, { status: 401 });
     }
 
-    // EXTRA RESTRICTION: Only allow aravind or ramaswamy for DOCTOR role
-    if (user.role === 'DOCTOR' && cleanedSearch) {
+    // 3. Handle Name-based restrictions
+    const cleanedSearch = customName ? customName.toLowerCase().trim().replace(/^(dr\.?\s*)+/, '') : '';
+
+    if (user.role === 'DOCTOR') {
+      if (!cleanedSearch) {
+        return NextResponse.json({ success: false, error: "Doctor Name is required" }, { status: 400 });
+      }
+
       const allowedDoctors = ['aravind', 'ramaswamy'];
-      if (!allowedDoctors.includes(cleanedSearch.toLowerCase())) {
+      if (!allowedDoctors.includes(cleanedSearch)) {
         return NextResponse.json({ 
           success: false, 
           error: "Unauthorized: Only Dr. Aravind and Dr. Ramaswamy are registered for this portal." 
         }, { status: 403 });
       }
-    }
 
-    if (user.password !== password) {
-       return NextResponse.json({ success: false, error: "Incorrect password" }, { status: 401 });
+      // Also ensure the customName matches the record in the DB for doctors
+      if (!user.name.toLowerCase().includes(cleanedSearch)) {
+        return NextResponse.json({ success: false, error: `Name "${customName}" does not match our records for this email.` }, { status: 401 });
+      }
+    } else {
+      // For non-doctors: "Reception can log in with any name"
+      // We don't block them if the name doesn't match the DB, but we still use the provided name for the session if available.
     }
 
     // Set a simple cookie (In a production app, use JWT and iron-session)
