@@ -165,7 +165,7 @@ export default function DoctorDashboard() {
           <div className="flex items-center gap-4">
              <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thanjavur</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thoothukudi</div>
              </div>
           </div>
         </header>
@@ -218,29 +218,68 @@ export default function DoctorDashboard() {
           <div className="glass-card" style={{ width: '650px' }}>
             {selectedVisit ? (
               <>
-                <div className="flex justify-between items-start mb-6">
-                   <div>
-                      <h3 style={{ marginBottom: '5px' }}>Clinical Note</h3>
-                      <p style={{ color: 'var(--secondary)', fontWeight: 600 }}>
-                        {selectedVisit.patient.name} (Token #{selectedVisit.tokenNumber})
-                      </p>
-                      <button 
-                        className="btn btn-outline" style={{ fontSize: '11px', padding: '2px 8px', marginTop: '5px' }}
-                        onClick={() => window.open(`/dashboard/doctor/prescription/${selectedVisit.id}`, '_blank')}
-                      >
-                        <i className="fa-solid fa-print mr-1"></i> Print Prescription
-                      </button>
-                   </div>
-                   <div className="badge badge-primary" style={{ padding: '10px' }}>
-                      BMI: {selectedVisit.bmi}
-                   </div>
-                </div>
+                {/* ── Patient Information Panel ── */}
+                <div style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: '#0A4D68', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold', flexShrink: 0 }}>
+                        {selectedVisit.patient.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '800', fontSize: '18px', color: '#0F172A' }}>{selectedVisit.patient.name}</div>
+                        <div style={{ fontSize: '13px', color: '#0A4D68', fontWeight: '600', marginTop: '2px' }}>
+                          {selectedVisit.patient.uhid} &nbsp;·&nbsp; Token #{selectedVisit.tokenNumber}
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      className="btn btn-outline" style={{ fontSize: '11px', padding: '5px 12px' }}
+                      onClick={() => window.open(`/dashboard/doctor/prescription/${selectedVisit.id}`, '_blank')}
+                    >
+                      <i className="fa-solid fa-print mr-1"></i> Print Rx
+                    </button>
+                  </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '15px', padding: '15px', background: '#f8fafc', borderRadius: '8px' }}>
-                    <div style={{ textAlign: 'center' }}><small>BP</small><div style={{ fontWeight: 600 }}>{selectedVisit.bloodPressure || 'N/A'}</div></div>
-                    <div style={{ textAlign: 'center' }}><small>Pulse</small><div style={{ fontWeight: 600 }}>{selectedVisit.pulse || 'N/A'}</div></div>
-                    <div style={{ textAlign: 'center' }}><small>SpO₂</small><div style={{ fontWeight: 600 }}>{selectedVisit.spo2 || 'N/A'}%</div></div>
-                    <div style={{ textAlign: 'center' }}><small>Temp</small><div style={{ fontWeight: 600 }}>{selectedVisit.temperature || 'N/A'}°F</div></div>
+                  {/* Receptionist Details */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
+                    <div style={{ background: 'white', borderRadius: '8px', padding: '10px 14px', border: '1px solid #E0F2FE' }}>
+                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Age / Gender</div>
+                      <div style={{ fontWeight: '700', color: '#0F172A', fontSize: '14px' }}>{selectedVisit.patient.age}Y / {selectedVisit.patient.gender}</div>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: '8px', padding: '10px 14px', border: '1px solid #E0F2FE' }}>
+                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Phone</div>
+                      <div style={{ fontWeight: '700', color: '#0F172A', fontSize: '14px' }}>{selectedVisit.patient.phone || '—'}</div>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: '8px', padding: '10px 14px', border: '1px solid #E0F2FE' }}>
+                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Address</div>
+                      <div style={{ fontWeight: '600', color: '#0F172A', fontSize: '13px', lineHeight: '1.3' }}>{selectedVisit.patient.address || '—'}</div>
+                    </div>
+                  </div>
+
+                  {/* Nurse Vitals */}
+                  <div style={{ borderTop: '1px dashed #BAE6FD', paddingTop: '12px' }}>
+                    <div style={{ fontSize: '11px', color: '#0369A1', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>
+                      <i className="fa-solid fa-heart-pulse mr-1"></i> Vitals (from Nurse)
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                      {[
+                        { label: 'BP', value: selectedVisit.bloodPressure, unit: '' },
+                        { label: 'Pulse', value: selectedVisit.pulse, unit: '/min' },
+                        { label: 'SpO₂', value: selectedVisit.spo2, unit: '%' },
+                        { label: 'Temp', value: selectedVisit.temperature, unit: '°F' },
+                        { label: 'Weight', value: selectedVisit.weight, unit: 'kg' },
+                        { label: 'Height', value: selectedVisit.height, unit: 'cm' },
+                        { label: 'BMI', value: selectedVisit.bmi, unit: '' },
+                      ].map(({ label, value, unit }) => (
+                        <div key={label} style={{ textAlign: 'center', background: value ? '#0A4D68' : '#E2E8F0', borderRadius: '8px', padding: '8px 4px' }}>
+                          <div style={{ fontSize: '9px', color: value ? '#93C5FD' : '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+                          <div style={{ fontWeight: '700', color: value ? 'white' : '#94A3B8', fontSize: '13px', marginTop: '2px' }}>
+                            {value ? `${value}${unit}` : 'N/A'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Lab Results Display */}
