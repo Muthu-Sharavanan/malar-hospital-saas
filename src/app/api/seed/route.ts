@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   try {
-    // We use upsert to create or update users based on their email.
-    // This avoids foreign key constraint errors by keeping the same ID if the account exists.
+    // 1. Remove the legacy doctor account to prevent duplicates
+    await prisma.user.deleteMany({
+      where: { email: 'doctor@malar.com' }
+    });
 
     const users = [
       { name: 'Dr. Ramaswamy', email: 'ramaswamy@malar.com', password: 'password123', role: 'DOCTOR' },
@@ -16,7 +18,7 @@ export async function GET(req: Request) {
       { name: 'Admin Admin', email: 'admin@malar.com', password: 'password123', role: 'ADMIN' },
     ];
 
-    // Seed/Update all users
+    // 2. Seed/Update all users
     for (const user of users) {
       await prisma.user.upsert({
         where: { email: user.email },
@@ -34,28 +36,9 @@ export async function GET(req: Request) {
       });
     }
 
-    // SPECIAL CASE: If 'doctor@malar.com' exists, we should probably keep it but update its password 
-    // to match Ramaswamy's so it still works if they use the old email, 
-    // or we can try to reassign its visits later.
-    // For now, let's just update his password too so they aren't locked out.
-    await prisma.user.upsert({
-      where: { email: 'doctor@malar.com' },
-      update: {
-        name: 'Dr. Ramaswamy',
-        password: 'password123',
-        role: 'DOCTOR'
-      },
-      create: {
-        name: 'Dr. Ramaswamy',
-        email: 'doctor@malar.com',
-        password: 'password123',
-        role: 'DOCTOR'
-      }
-    });
-
     return NextResponse.json({ 
       success: true, 
-      message: "Production database synchronized successfully! You can now login with either ramaswamy@malar.com or the old doctor@malar.com with 'password123'.",
+      message: "Production database synchronized successfully! Duplicate 'doctor@malar.com' has been removed.",
       users: users.map(u => ({ name: u.name, role: u.role }))
     });
   } catch (error: any) {
