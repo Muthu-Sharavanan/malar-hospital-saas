@@ -54,12 +54,30 @@ export async function GET(req: Request) {
     }
 
     const session = JSON.parse(sessionCookie.value);
-    const doctorId = session.id;
+    const sessionName = session.name || '';
+    
+    // Clean name for exact matching: remove "Dr." prefix, trim, lowercase
+    const cleanSearch = sessionName.toLowerCase().trim().replace(/^(dr\.?\s*)+/, '');
 
-    // Only show patients assigned to the logged-in doctor with vitals done or consulting
+    // Filter patients where assignedDoctorName matches OR doctor record matches
     const doctorsQueue = await prisma.visit.findMany({
       where: {
-        doctorId: doctorId,
+        OR: [
+          {
+            assignedDoctorName: {
+              contains: cleanSearch,
+              mode: 'insensitive'
+            }
+          },
+          {
+            doctor: {
+              name: {
+                contains: cleanSearch,
+                mode: 'insensitive'
+              }
+            }
+          }
+        ],
         status: { in: ['VITALS_DONE', 'CONSULTING'] }
       },
       include: {
