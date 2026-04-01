@@ -561,6 +561,7 @@ export default function ReceptionDashboard() {
                </div>
                <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginBottom: '20px', fontSize: '13px' }}>
                   <strong>UHID:</strong> {historyData?.patient?.uhid} | <strong>Phone:</strong> {historyData?.patient?.phone} | <strong>Age/Gender:</strong> {historyData?.patient?.age}Y, {historyData?.patient?.gender}
+                  {historyData?.patient?.address && <span> | <strong>Address:</strong> {historyData?.patient?.address}</span>}
                </div>
 
                {historyData.history.length === 0 ? (
@@ -701,6 +702,20 @@ export default function ReceptionDashboard() {
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                  ADDRESS <span style={{ fontWeight: '400', color: '#94A3B8', fontSize: '12px' }}>(optional)</span>
+                </label>
+                <textarea
+                  className="form-input"
+                  placeholder="Door No., Street, Area, City..."
+                  rows={3}
+                  value={formData.address}
+                  onChange={e => setFormData({...formData, address: e.target.value})}
+                  style={{ border: '1px solid #E2E8F0', borderRadius: '8px', resize: 'none', padding: '12px 15px', fontSize: '15px', fontFamily: 'inherit', lineHeight: '1.5' }}
+                />
               </div>
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>

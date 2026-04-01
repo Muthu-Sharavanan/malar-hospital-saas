@@ -47,7 +47,7 @@ export default function FinalBillPrint() {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <h1 style={{ margin: 0, color: '#0A4D68' }}>MALAR HOSPITAL</h1>
-        <p style={{ margin: 0, fontSize: '14px' }}>Opp. Railway Station, Thanjavur</p>
+        <p style={{ margin: 0, fontSize: '14px' }}>Opp. Railway Station, Thoothukudi</p>
         <p style={{ margin: 0, fontSize: '14px' }}>Phone: 04362-231234</p>
         <div style={{ margin: '15px 0', borderBottom: '2px solid #0A4D68' }}></div>
         <h3 style={{ margin: 0, textDecoration: 'underline' }}>CONSOLIDATED VISIT SUMMARY</h3>
@@ -59,6 +59,7 @@ export default function FinalBillPrint() {
             <p><strong>Patient Name:</strong> {visit.patient.name}</p>
             <p><strong>Patient ID / UHID:</strong> {visit.patient.uhid}</p>
             <p><strong>Age / Gender:</strong> {visit.patient.age}Y, {visit.patient.gender}</p>
+            {visit.patient.address && <p><strong>Address:</strong> {visit.patient.address}</p>}
          </div>
          <div style={{ textAlign: 'right' }}>
             <p><strong>Visit ID:</strong> {visit.id.slice(-6).toUpperCase()}</p>

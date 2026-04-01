@@ -30,7 +30,7 @@ export default function ReceiptPrint() {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '30px' }}>
         <h1 style={{ margin: 0, color: '#0A4D68' }}>MALAR HOSPITAL</h1>
-        <p style={{ margin: 0, fontSize: '14px' }}>Opp. Railway Station, Thanjavur</p>
+        <p style={{ margin: 0, fontSize: '14px' }}>Opp. Railway Station, Thoothukudi</p>
         <p style={{ margin: 0, fontSize: '14px' }}>Phone: 04362-231234</p>
         <div style={{ margin: '15px 0', borderBottom: '2px solid #0A4D68' }}></div>
         <h3 style={{ margin: 0, textDecoration: 'underline' }}>PAYMENT RECEIPT</h3>
@@ -50,6 +50,7 @@ export default function ReceiptPrint() {
 
       <div style={{ fontSize: '16px', marginBottom: '40px' }}>
          <p>Received with thanks from <strong>{bill.visit.patient.name}</strong> ({bill.visit.patient.age}Y, {bill.visit.patient.gender[0]})</p>
+         {bill.visit.patient.address && <p><strong>Address:</strong> {bill.visit.patient.address}</p>}
          <p>Towards <strong>{bill.type}</strong> consultation/services.</p>
          <p>Consulting Doctor: <strong>{bill.visit.doctor.name}</strong></p>
       </div>
