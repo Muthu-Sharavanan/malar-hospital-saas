@@ -41,11 +41,22 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Fetch all patients who have vitals done
+    const { cookies } = await import('next/headers');
+    const sessionCookie = (await cookies()).get('session');
+
+    if (!sessionCookie) {
+      return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const session = JSON.parse(sessionCookie.value);
+    const doctorId = session.id;
+
+    // Only show patients assigned to the logged-in doctor with vitals done or consulting
     const doctorsQueue = await prisma.visit.findMany({
       where: {
+        doctorId: doctorId,
         status: { in: ['VITALS_DONE', 'CONSULTING'] }
       },
       include: {
