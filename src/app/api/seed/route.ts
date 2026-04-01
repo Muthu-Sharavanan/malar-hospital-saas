@@ -6,36 +6,48 @@ export async function GET(req: Request) {
     const oldEmail = 'doctor@malar.com';
     const newEmail = 'ramaswamy@malar.com';
 
-    // 1. Find both users
+    // 1. Ensure the NEW user exists first so we have a valid target ID
+    const newUser = await prisma.user.upsert({
+      where: { email: newEmail },
+      update: {
+        name: 'Dr. Ramaswamy',
+        password: 'password123',
+        role: 'DOCTOR'
+      },
+      create: {
+        name: 'Dr. Ramaswamy',
+        email: newEmail,
+        password: 'password123',
+        role: 'DOCTOR'
+      }
+    });
+
+    // 2. Find the old user
     const oldUser = await prisma.user.findUnique({ where: { email: oldEmail } });
-    const newUser = await prisma.user.findUnique({ where: { email: newEmail } });
 
-    if (oldUser && newUser && oldUser.id !== newUser.id) {
-      console.log(`Reassigning data from ${oldEmail} (${oldUser.id}) to ${newEmail} (${newUser.id})...`);
+    if (oldUser && oldUser.id !== newUser.id) {
+      console.log(`Reassigning data from ${oldUser.id} to ${newUser.id}...`);
       
-      // Reassign Visits
-      await prisma.visit.updateMany({
-        where: { doctorId: oldUser.id },
-        data: { doctorId: newUser.id }
-      });
-
-      // Reassign Surgeries (if any)
-      await prisma.surgery.updateMany({
-        where: { surgeonId: oldUser.id },
-        data: { surgeonId: newUser.id }
-      });
-
-      // Reassign Bills (if any authorizingDocId matches)
-      await prisma.bill.updateMany({
-        where: { authorizingDocId: oldUser.id },
-        data: { authorizingDocId: newUser.id }
-      });
-
-      // 2. Safely delete the old doctor account
-      await prisma.user.delete({
-        where: { id: oldUser.id }
-      });
-      console.log(`Successfully deleted legacy account: ${oldEmail}`);
+      // Use a transaction to ensure all-or-nothing reassignment
+      await prisma.$transaction([
+        prisma.visit.updateMany({
+          where: { doctorId: oldUser.id },
+          data: { doctorId: newUser.id }
+        }),
+        prisma.surgery.updateMany({
+          where: { surgeonId: oldUser.id },
+          data: { surgeonId: newUser.id }
+        }),
+        prisma.bill.updateMany({
+          where: { authorizingDocId: oldUser.id },
+          data: { authorizingDocId: newUser.id }
+        }),
+        // DELETE the old user only after everything is reassigned
+        prisma.user.delete({
+          where: { id: oldUser.id }
+        })
+      ]);
+      console.log("Reassignment and legacy account deletion successful.");
     }
 
     const users = [
@@ -48,7 +60,7 @@ export async function GET(req: Request) {
       { name: 'Admin Admin', email: 'admin@malar.com', password: 'password123', role: 'ADMIN' },
     ];
 
-    // 3. Seed/Update all users
+    // 4. Seed/Update all other users (mostly for roles/passwords integrity)
     for (const user of users) {
       await prisma.user.upsert({
         where: { email: user.email },
@@ -68,7 +80,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: "Database cleanup and synchronization complete! Duplicate doctor account reassigned and removed.",
+      message: "Database cleanup and synchronization complete! Duplicate doctor account reassigned and removed using transaction.",
       users: users.map(u => ({ name: u.name, role: u.role }))
     });
   } catch (error: any) {
