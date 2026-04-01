@@ -7,6 +7,11 @@ export default function DoctorDashboard() {
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
+
+  // Format doctor name with Dr. prefix
+  const drName = userName
+    ? 'Dr. ' + userName.trim().replace(/^(dr\.?\s*)+/i, '')
+    : 'Doctor';
   const [loading, setLoading] = useState(false);
   
   // Consultation State
@@ -145,7 +150,7 @@ export default function DoctorDashboard() {
         <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px' }}>Malar HMS</h2>
         <nav className="flex flex-col gap-4">
           <a href="#" className="flex items-center gap-2" style={{ color: 'white', fontWeight: 600 }}>
-            <i className="fa-solid fa-stethoscope"></i> Doctor Dashboard
+            <i className="fa-solid fa-stethoscope"></i> {drName}
           </a>
           <a href="#" className="flex items-center gap-2" style={{ color: 'white', opacity: 0.7 }}>
              OPD Patients
@@ -159,7 +164,7 @@ export default function DoctorDashboard() {
       <main style={{ flex: 1, padding: '40px', background: 'var(--bg-light)' }}>
         <header className="flex justify-between items-center mb-10">
           <div>
-            <h1 style={{ fontSize: '28px', color: 'var(--primary)' }}>Welcome, {userName || 'Doctor'}</h1>
+            <h1 style={{ fontSize: '28px', color: 'var(--primary)' }}>Welcome, {drName}</h1>
             <p style={{ color: 'var(--text-muted)' }}>Consult patients and manage clinical records for the <strong style={{color: 'var(--secondary)'}}>{shift}</strong> shift.</p>
           </div>
           <div className="flex items-center gap-4">
