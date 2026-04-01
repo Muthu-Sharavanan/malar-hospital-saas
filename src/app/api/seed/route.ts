@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   try {
-    // Seed using upsert for idempotency
+    // We use upsert to create or update users based on their email.
+    // This avoids foreign key constraint errors by keeping the same ID if the account exists.
 
     const users = [
       { name: 'Dr. Ramaswamy', email: 'ramaswamy@malar.com', password: 'password123', role: 'DOCTOR' },
@@ -15,25 +16,46 @@ export async function GET(req: Request) {
       { name: 'Admin Admin', email: 'admin@malar.com', password: 'password123', role: 'ADMIN' },
     ];
 
-    // AGGRESSIVE CLEANUP: Delete any account with the old email or name variations
-    await prisma.user.deleteMany({
-      where: {
-        OR: [
-          { email: 'doctor@malar.com' },
-          { name: { contains: 'Ramasamy', mode: 'insensitive' } },
-          { name: { contains: 'Ramaswamy', mode: 'insensitive' } }
-        ]
+    // Seed/Update all users
+    for (const user of users) {
+      await prisma.user.upsert({
+        where: { email: user.email },
+        update: {
+          name: user.name,
+          password: user.password,
+          role: user.role as any
+        },
+        create: {
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          role: user.role as any
+        }
+      });
+    }
+
+    // SPECIAL CASE: If 'doctor@malar.com' exists, we should probably keep it but update its password 
+    // to match Ramaswamy's so it still works if they use the old email, 
+    // or we can try to reassign its visits later.
+    // For now, let's just update his password too so they aren't locked out.
+    await prisma.user.upsert({
+      where: { email: 'doctor@malar.com' },
+      update: {
+        name: 'Dr. Ramaswamy',
+        password: 'password123',
+        role: 'DOCTOR'
+      },
+      create: {
+        name: 'Dr. Ramaswamy',
+        email: 'doctor@malar.com',
+        password: 'password123',
+        role: 'DOCTOR'
       }
     });
 
-    // Create the fresh doctor accounts and others
-    for (const user of users) {
-      await prisma.user.create({ data: user });
-    }
-
     return NextResponse.json({ 
       success: true, 
-      message: "Production database seeded successfully with 6 staff accounts!",
+      message: "Production database synchronized successfully! You can now login with either ramaswamy@malar.com or the old doctor@malar.com with 'password123'.",
       users: users.map(u => ({ name: u.name, role: u.role }))
     });
   } catch (error: any) {
