@@ -26,6 +26,17 @@ export async function POST(req: Request) {
        return NextResponse.json({ success: false, error: `Name "${customName}" not found for this email` }, { status: 401 });
     }
 
+    // EXTRA RESTRICTION: Only allow aravind or ramaswamy for DOCTOR role
+    if (user.role === 'DOCTOR' && cleanedSearch) {
+      const allowedDoctors = ['aravind', 'ramaswamy'];
+      if (!allowedDoctors.includes(cleanedSearch.toLowerCase())) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Unauthorized: Only Dr. Aravind and Dr. Ramaswamy are registered for this portal." 
+        }, { status: 403 });
+      }
+    }
+
     if (user.password !== password) {
        return NextResponse.json({ success: false, error: "Incorrect password" }, { status: 401 });
     }
