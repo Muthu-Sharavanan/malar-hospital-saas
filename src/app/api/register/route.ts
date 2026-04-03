@@ -34,20 +34,31 @@ export async function POST(req: Request) {
       });
     } else {
       isNewPatient = true;
-      const count = await prisma.patient.count();
-      const uhid = `MH-${10000 + count + 1}`;
+      // More robust UHID generation: get the highest UHID and increment
+      const lastPatient = await prisma.patient.findFirst({
+        orderBy: { uhid: 'desc' }
+      });
+      
+      let nextUhidNum = 10001;
+      if (lastPatient && lastPatient.uhid.startsWith('MH-')) {
+        const lastNum = parseInt(lastPatient.uhid.split('-')[1]);
+        if (!isNaN(lastNum)) {
+          nextUhidNum = lastNum + 1;
+        }
+      }
+      
+      const uhid = `MH-${nextUhidNum}`;
       patient = await prisma.patient.create({
         data: { uhid, name, age: parseInt(age), gender, phone, address }
       });
     }
 
-    // Calculate next token for this doctor today
+    // Calculate NEXT GLOBAL TOKEN for today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const lastVisit = await prisma.visit.findFirst({
       where: {
-        doctorId: doctorId,
         visitDate: {
           gte: today
         }
@@ -59,11 +70,15 @@ export async function POST(req: Request) {
 
     const nextToken = lastVisit ? lastVisit.tokenNumber + 1 : 1;
 
+    const selectedDoc = await prisma.user.findUnique({ where: { id: doctorId } });
+    const assignedDoctorName = selectedDoc?.name || 'Unknown';
+
     // 2. Create Visit
     const visit = await prisma.visit.create({
       data: {
         patientId: patient.id,
         doctorId,
+        assignedDoctorName,
         tokenNumber: nextToken,
         status: 'REGISTERED'
       },
@@ -77,10 +92,10 @@ export async function POST(req: Request) {
     await prisma.bill.create({
       data: {
         visitId: visit.id,
-        amount: 500,
+        amount: 200,
         type: 'CONSULTATION',
         paymentStatus: 'UNPAID',
-        finalAmount: 500
+        finalAmount: 200
       }
     });
 
