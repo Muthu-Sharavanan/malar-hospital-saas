@@ -235,6 +235,22 @@ export default function ReceptionDashboard() {
     }
   };
 
+  const toggleDoctorAvailability = async (userId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, isAvailable: !currentStatus })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchDoctors(); // Refresh list
+      }
+    } catch (err) {
+      console.error("Failed to toggle availability", err);
+    }
+  };
+
   const handleUpdateBill = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -731,7 +747,8 @@ export default function ReceptionDashboard() {
                     const displayName = `Dr. ${cleanName}`;
                     return (
                       <option key={doc.id} value={doc.id}>
-                        {displayName}{doc.specialization?.trim() ? ` (${doc.specialization.trim()})` : ''}
+                        {displayName}{doc.specialization?.trim() ? ` (${doc.specialization.trim()})` : ''} 
+                        {doc.isAvailable === false ? ' (UNAVAILABLE)' : ''}
                       </option>
                     );
                   })}
@@ -952,7 +969,27 @@ export default function ReceptionDashboard() {
                     <td style={{ padding: '12px' }}>{doc.role}</td>
                     <td style={{ padding: '12px' }}>{doc.email}</td>
                     <td style={{ padding: '12px' }}>
-                       <span className="badge badge-success">Available</span>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                         <span className={`badge ${doc.isAvailable !== false ? 'badge-success' : 'badge-danger'}`} style={{ 
+                           background: doc.isAvailable !== false ? '#dcfce7' : '#fee2e2',
+                           color: doc.isAvailable !== false ? '#166534' : '#991b1b'
+                         }}>
+                            {doc.isAvailable !== false ? 'Available' : 'Unavailable'}
+                         </span>
+                         <button 
+                            onClick={() => toggleDoctorAvailability(doc.id, doc.isAvailable !== false)}
+                            style={{ 
+                              padding: '4px 8px', 
+                              fontSize: '10px', 
+                              borderRadius: '4px', 
+                              border: '1px solid #cbd5e1',
+                              background: 'white',
+                              cursor: 'pointer'
+                            }}
+                         >
+                            Toggle
+                         </button>
+                       </div>
                     </td>
                   </tr>
                 )) : (
