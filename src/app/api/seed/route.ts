@@ -50,6 +50,19 @@ export async function GET(req: Request) {
       console.log("Reassignment and legacy account deletion successful.");
     }
 
+    // 3. CLEANUP: Delete all test data for a fresh demo
+    console.log("Cleaning up test data...");
+    await prisma.$transaction([
+      prisma.prescription.deleteMany({}),
+      prisma.labOrder.deleteMany({}),
+      prisma.bill.deleteMany({}),
+      prisma.visit.deleteMany({}),
+      prisma.admission.deleteMany({}),
+      prisma.surgery.deleteMany({}),
+      prisma.patient.deleteMany({}), // Clean slate for patients too
+    ]);
+
+    // 4. SEED: Essential Users
     const users = [
       { name: 'Dr. Ramaswamy', email: 'ramaswamy@malar.com', password: 'password123', role: 'DOCTOR' },
       { name: 'Dr. Aravind', email: 'aravind@malar.com', password: 'password123', role: 'DOCTOR' },
@@ -60,28 +73,29 @@ export async function GET(req: Request) {
       { name: 'Admin Admin', email: 'admin@malar.com', password: 'password123', role: 'ADMIN' },
     ];
 
-    // 4. Seed/Update all other users (mostly for roles/passwords integrity)
     for (const user of users) {
       await prisma.user.upsert({
         where: { email: user.email },
-        update: {
-          name: user.name,
-          password: user.password,
-          role: user.role as any
-        },
-        create: {
-          name: user.name,
-          email: user.email,
-          password: user.password,
-          role: user.role as any
-        }
+        update: { name: user.name, password: user.password, role: user.role as any },
+        create: { name: user.name, email: user.email, password: user.password, role: user.role as any }
       });
+    }
+
+    // 5. SEED: Professional Demo Patients
+    const demoPatients = [
+      { uhid: 'MH-10001', name: 'S. MEENAKSHI', age: 45, gender: 'Female', phone: '9840123456', address: 'Anna Nagar, Thoothukudi' },
+      { uhid: 'MH-10002', name: 'RAJESH KUMAR', age: 38, gender: 'Male', phone: '9443210987', address: 'Beach Road, Thoothukudi' },
+      { uhid: 'MH-10003', name: 'ABDUL RAHMAN', age: 29, gender: 'Male', phone: '9786543210', address: 'New Colony, Srivaikuntam' },
+    ];
+
+    for (const p of demoPatients) {
+      await prisma.patient.create({ data: p });
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: "Database cleanup and synchronization complete! Duplicate doctor account reassigned and removed using transaction.",
-      users: users.map(u => ({ name: u.name, role: u.role }))
+      message: "LIVE RESET SUCCESSFUL! All test data cleared. Professional demo patients (Meenakshi, Rajesh, Abdul) are ready.",
+      timestamp: new Date().toISOString()
     });
   } catch (error: any) {
     console.error("Seed error:", error);
