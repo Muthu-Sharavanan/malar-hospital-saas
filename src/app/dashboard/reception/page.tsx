@@ -815,7 +815,10 @@ export default function ReceptionDashboard() {
                       <button 
                         className="btn btn-outline" 
                         style={{ padding: '5px 10px', fontSize: '12px' }}
-                        onClick={() => fetchHistory(v.patientId)}
+                        onClick={() => {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          fetchHistory(v.patientId);
+                        }}
                         disabled={loading}
                       >
                         <i className="fa-solid fa-clock-rotate-left mr-1"></i> View History
@@ -825,6 +828,7 @@ export default function ReceptionDashboard() {
                         className="btn btn-primary" 
                         style={{ padding: '5px 10px', fontSize: '12px', marginLeft: '5px' }}
                         onClick={() => {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                           setSurgeryForm({
                             visitId: v.id,
                             patientName: v.patient.name,
@@ -900,7 +904,12 @@ export default function ReceptionDashboard() {
                           <button 
                             className="btn btn-primary" 
                             style={{ padding: '5px 15px', fontSize: '11px' }} 
-                            onClick={() => { setSelectedBill(b); setBillingForm({...billingForm, discount: 0, waiverReason: ''}); setShowBillModal(true); }}
+                            onClick={() => { 
+                               window.scrollTo({ top: 0, behavior: 'smooth' });
+                               setSelectedBill(b); 
+                               setBillingForm({...billingForm, discount: 0, waiverReason: ''}); 
+                               setShowBillModal(true); 
+                             }}
                           >
                             Collect Payment
                           </button>
@@ -917,7 +926,12 @@ export default function ReceptionDashboard() {
                               <button 
                                 className="btn btn-outline" 
                                 style={{ padding: '5px 15px', fontSize: '11px', borderColor: 'var(--danger)', color: 'var(--danger)' }} 
-                                onClick={() => { setSelectedBill(b); setBillingForm({...billingForm, discount: 0, waiverReason: ''}); setShowBillModal(true); }}
+                                onClick={() => { 
+                               window.scrollTo({ top: 0, behavior: 'smooth' });
+                               setSelectedBill(b); 
+                               setBillingForm({...billingForm, discount: 0, waiverReason: ''}); 
+                               setShowBillModal(true); 
+                             }}
                               >
                                 Refund
                               </button>
