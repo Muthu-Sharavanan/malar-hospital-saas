@@ -979,15 +979,21 @@ export default function ReceptionDashboard() {
                          <button 
                             onClick={() => toggleDoctorAvailability(doc.id, doc.isAvailable !== false)}
                             style={{ 
-                              padding: '4px 8px', 
-                              fontSize: '10px', 
-                              borderRadius: '4px', 
-                              border: '1px solid #cbd5e1',
-                              background: 'white',
-                              cursor: 'pointer'
+                              width: '32px',
+                              height: '32px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '8px', 
+                              border: 'none',
+                              background: doc.isAvailable !== false ? '#fee2e2' : '#dcfce7',
+                              color: doc.isAvailable !== false ? '#991b1b' : '#166534',
+                              cursor: 'pointer',
+                              transition: '0.2s'
                             }}
+                            title={doc.isAvailable !== false ? 'Mark Unavailable' : 'Mark Available'}
                          >
-                            Toggle
+                            <i className={`fa-solid ${doc.isAvailable !== false ? 'fa-xmark' : 'fa-check'}`}></i>
                          </button>
                        </div>
                     </td>
