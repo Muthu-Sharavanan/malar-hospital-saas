@@ -33,7 +33,7 @@ export default function DoctorDashboard() {
 
   const [selectedTests, setSelectedTests] = useState<any[]>([]);
   const [drugs, setDrugs] = useState<any[]>([]);
-  const [currentDrug, setCurrentDrug] = useState({ name: '', dosage: '1-0-1', duration: '5 days', instructions: 'After food' });
+  const [currentDrug, setCurrentDrug] = useState({ name: '', dosage: '1-0-1', duration: '5 Days', instructions: 'After food' });
 
   const commonTests = [
     { name: 'CBC (Complete Blood Count)', category: 'Hematology' },
@@ -47,7 +47,7 @@ export default function DoctorDashboard() {
   const handleAddDrug = () => {
     if (!currentDrug.name) return;
     setDrugs([...drugs, currentDrug]);
-    setCurrentDrug({ name: '', dosage: '1-0-1', duration: '5 days', instructions: 'After food' });
+    setCurrentDrug({ name: '', dosage: '1-0-1', duration: '5 Days', instructions: 'After food' });
   };
 
   const handlePrescribe = async () => {
@@ -254,31 +254,12 @@ export default function DoctorDashboard() {
                     </button>
                   </div>
 
-                  {/* Receptionist Details */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
-                    <div style={{ background: 'white', borderRadius: '8px', padding: '10px 14px', border: '1px solid #E0F2FE' }}>
-                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Age / Gender</div>
-                      <div style={{ fontWeight: '700', color: '#0F172A', fontSize: '14px' }}>{selectedVisit.patient.age}Y / {selectedVisit.patient.gender}</div>
-                    </div>
-                    <div style={{ background: 'white', borderRadius: '8px', padding: '10px 14px', border: '1px solid #E0F2FE' }}>
-                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Phone</div>
-                      <div style={{ fontWeight: '700', color: '#0F172A', fontSize: '14px' }}>{selectedVisit.patient.phone || '—'}</div>
-                    </div>
-                    <div style={{ background: 'white', borderRadius: '8px', padding: '10px 14px', border: '1px solid #E0F2FE' }}>
-                      <div style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Address</div>
-                      <div style={{ fontWeight: '600', color: '#0F172A', fontSize: '13px', lineHeight: '1.3' }}>{selectedVisit.patient.address || '—'}</div>
-                    </div>
-                  </div>
-
-                  {/* Nurse Vitals */}
+                  {/* Vitals Summary */}
                   <div style={{ borderTop: '1px dashed #BAE6FD', paddingTop: '12px' }}>
-                    <div style={{ fontSize: '11px', color: '#0369A1', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>
-                      <i className="fa-solid fa-heart-pulse mr-1"></i> Vitals (from Nurse)
-                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
                       {[
                         { label: 'BP', value: selectedVisit.bloodPressure, unit: '' },
-                        { label: 'Pulse', value: selectedVisit.pulse, unit: '/min' },
+                        { label: 'Pulse', value: selectedVisit.pulse, unit: '' },
                         { label: 'SpO₂', value: selectedVisit.spo2, unit: '%' },
                         { label: 'Temp', value: selectedVisit.temperature, unit: '°F' },
                         { label: 'Weight', value: selectedVisit.weight, unit: 'kg' },
@@ -338,38 +319,59 @@ export default function DoctorDashboard() {
                   <div className="mb-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
                     <label className="form-label">Prescription (E-Prescribe)</label>
                     
-                    <div className="flex gap-2 mb-4">
+                    <div className="flex flex-col gap-3 mb-4 p-4" style={{ background: '#f0f9ff', borderRadius: '10px', border: '1px solid #bae6fd' }}>
                       <input 
-                         type="text" className="form-input" style={{ flex: 2 }} placeholder="Medicine Name" 
+                         type="text" className="form-input" style={{ width: '100%', marginBottom: '10px' }} placeholder="Medicine Name (e.g. Paracetamol)" 
                          value={currentDrug.name} onChange={e => setCurrentDrug({...currentDrug, name: e.target.value})}
                       />
-                      <input 
-                         type="text" className="form-input" style={{ flex: 1 }} placeholder="1-0-1" 
-                         value={currentDrug.dosage} onChange={e => setCurrentDrug({...currentDrug, dosage: e.target.value})}
-                      />
-                      <button type="button" className="btn btn-outline" onClick={handleAddDrug}>Add</button>
+                      
+                      {/* Dosage Selection (Clicking Format) */}
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dosage (Frequency)</div>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {['1-0-1', '1-1-1', '1-0-0', '0-0-1', '1-1-1-1', 'SOS'].map(d => (
+                            <button 
+                              key={d} type="button" 
+                              onClick={() => setCurrentDrug({...currentDrug, dosage: d})}
+                              className={`btn ${currentDrug.dosage === d ? 'btn-primary' : 'btn-outline'}`}
+                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px' }}
+                            >
+                              {d}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Duration Selection (Clicking Format) */}
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: 'bold', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duration (Days)</div>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {['1 Day', '3 Days', '5 Days', '1 Week', '10 Days', '2 Weeks', '1 Month'].map(dur => (
+                            <button 
+                              key={dur} type="button" 
+                              onClick={() => setCurrentDrug({...currentDrug, duration: dur})}
+                              className={`btn ${currentDrug.duration === dur ? 'btn-secondary' : 'btn-outline'}`}
+                              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px' }}
+                            >
+                              {dur}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button type="button" className="btn btn-primary" style={{ width: '100%', fontWeight: 'bold' }} onClick={handleAddDrug}>
+                        <i className="fa-solid fa-plus mr-1"></i> Add to Prescription
+                      </button>
                     </div>
 
-                    {/* Existing Prescriptions */}
-                    {selectedVisit.prescriptions?.length > 0 && (
-                      <div className="mb-4">
-                        <small style={{ color: 'var(--text-muted)' }}>Already Prescribed:</small>
-                        {selectedVisit.prescriptions.map((p: any) => (
-                          <div key={p.id} className="flex justify-between p-2 mb-1" style={{ background: '#f8fafc', borderRadius: '5px', fontSize: '12px', border: '1px solid var(--border)' }}>
-                            <span><strong>{p.drugName}</strong> ({p.dosage})</span>
-                            <span className={`badge ${p.status === 'DISPENSED' ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '10px' }}>{p.status}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
+                    {/* Prescribed List (Hidden duration to keep it clean) */}
                     {drugs.length > 0 && (
                       <div className="mb-4">
                          {drugs.map((d, i) => (
-                           <div key={i} className="flex justify-between p-2 mb-1" style={{ background: '#f1f5f9', borderRadius: '5px', fontSize: '13px' }}>
-                              <span><strong>{d.name}</strong> ({d.dosage})</span>
-                              <span>{d.duration}</span>
-                           </div>
+                            <div key={i} className="flex justify-between p-3 mb-1" style={{ background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', border: '1px solid #cbd5e1' }}>
+                               <span><i className="fa-solid fa-pills mr-2 text-slate-400"></i><strong>{d.name}</strong></span>
+                               <span className="font-bold text-primary">{d.dosage}</span>
+                            </div>
                          ))}
                          <button type="button" className="btn btn-secondary" style={{ width: '100%', marginTop: '10px' }} onClick={handlePrescribe} disabled={loading}>
                             Finalize Prescription
@@ -386,14 +388,6 @@ export default function DoctorDashboard() {
                     />
                   </div>
                   
-                  <div className="form-group">
-                    <label className="form-label">History</label>
-                    <textarea 
-                      className="form-input" style={{ height: '80px' }} placeholder="Prev medical history..."  
-                      value={consultation.history} onChange={e => setConsultation({...consultation, history: e.target.value})}
-                    />
-                  </div>
-
                   <div className="form-group">
                     <label className="form-label">Examination Findings</label>
                     <textarea 
