@@ -467,11 +467,10 @@ export default function AdminDashboard() {
                 </div>
                 <button 
                   onClick={handleDeleteAllPatients} 
-                  className="btn btn-outline flex items-center gap-1" 
-                  style={{ color: '#ef4444', borderColor: '#ef4444', padding: '6px 12px', fontSize: '13px' }} 
-                  title="Delete All Patients"
+                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '8px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex' }}
+                  title="Delete All Patients (Requires Password)"
                 >
-                  <Trash2 size={16} /> Delete All
+                  <Trash2 size={18} />
                 </button>
               </div>
               <div className="relative w-full sm:w-72">
