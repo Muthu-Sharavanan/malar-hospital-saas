@@ -591,7 +591,17 @@ export default function ReceptionDashboard() {
                       <div key={v.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '15px', background: 'white' }}>
                          <div className="flex justify-between items-center mb-2" style={{ borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
                            <span style={{ fontWeight: 'bold' }}>{new Date(v.visitDate).toLocaleDateString()}</span>
-                           <span className="badge badge-primary">Dr. {v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}</span>
+                           <div className="flex gap-2 items-center">
+                             <button 
+                               className="btn btn-outline flex items-center justify-center" 
+                               style={{ padding: '2px 8px', fontSize: '11px', color: '#0d9488', borderColor: '#ccfbf1', background: '#f0fdfa', fontWeight: 'bold' }}
+                               onClick={() => window.open(`/dashboard/doctor/prescription/${v.id}`, '_blank')}
+                               title="Print Prescription"
+                             >
+                               <i className="fa-solid fa-print"></i>&nbsp;Print Rx
+                             </button>
+                             <span className="badge badge-primary">Dr. {v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}</span>
+                           </div>
                          </div>
                          <div style={{ fontSize: '13px', marginTop: '10px' }}>
                            {v.diagnosis && <p><strong>Diagnosis:</strong> {v.diagnosis}</p>}
