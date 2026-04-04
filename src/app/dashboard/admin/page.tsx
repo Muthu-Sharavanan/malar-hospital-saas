@@ -449,8 +449,8 @@ export default function AdminDashboard() {
                 <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
                 <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
               </div>
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <div className="relative w-full sm:w-72">
+              <div className="flex items-start gap-3 w-full sm:w-auto">
+                <div className="relative w-full sm:w-72" style={{ height: '40px' }}>
                   <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
                   <input
                     type="text"
@@ -460,12 +460,12 @@ export default function AdminDashboard() {
                       setPatientSearch(e.target.value);
                       fetchPatientRecords(1, e.target.value);
                     }}
-                    style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B' }}
+                    style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B', margin: 0 }}
                   />
                 </div>
                 <button 
                   onClick={handleDeleteAllPatients} 
-                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '0', margin: '0', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', flexShrink: 0, transform: 'translateY(-2px)' }}
+                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '0', margin: '0', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', flexShrink: 0 }}
                   title="Delete All Patients (Requires Password)"
                 >
                   <Trash2 size={18} />
