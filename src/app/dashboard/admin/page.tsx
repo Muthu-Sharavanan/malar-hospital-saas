@@ -60,6 +60,10 @@ export default function AdminDashboard() {
   const [historyVisits, setHistoryVisits] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Secure Password Modal State
+  const [passwordModal, setPasswordModal] = useState<{ isOpen: boolean, type: 'SINGLE' | 'ALL' | null, patientId?: string, patientName?: string }>({ isOpen: false, type: null });
+  const [passwordInput, setPasswordInput] = useState('');
+
   const handleLiveReset = async () => {
     if (!confirm("⚠️ LIVE RESET: This will clear all test data and prepare professional demo patients. Continue?")) return;
     setLoading(true);
@@ -119,44 +123,33 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const handleDeletePatient = async (patientId: string, patientName: string) => {
-    const pwd = prompt(`To entirely delete ${patientName} and all their records, enter password:`);
-    if (!pwd) return;
-    setPatientLoading(true);
-    try {
-      const res = await fetch(`/api/patients/${patientId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pwd })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`Patient ${patientName} entirely deleted.`);
-        fetchPatientRecords(patientPage, patientSearch);
-      } else {
-        alert("Delete failed: " + data.error);
-      }
-    } catch (err) {
-      alert("Delete failed: " + err);
-    } finally {
-      setPatientLoading(false);
-    }
+  const handleDeletePatient = (patientId: string, patientName: string) => {
+    setPasswordModal({ isOpen: true, type: 'SINGLE', patientId, patientName });
+    setPasswordInput('');
   };
 
-  const handleDeleteAllPatients = async () => {
-    const pwd = prompt("WARNING: To entirely delete ALL patients and all their records, enter password:");
-    if (!pwd) return;
+  const handleDeleteAllPatients = () => {
+    setPasswordModal({ isOpen: true, type: 'ALL' });
+    setPasswordInput('');
+  };
+
+  const confirmDelete = async () => {
+    if (!passwordInput) return;
     setPatientLoading(true);
+    setPasswordModal({ isOpen: false, type: null });
+    
     try {
-      const res = await fetch('/api/patients/delete-all', {
+      const isAll = passwordModal.type === 'ALL';
+      const endpoint = isAll ? '/api/patients/delete-all' : `/api/patients/${passwordModal.patientId}`;
+      const res = await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pwd })
+        body: JSON.stringify({ password: passwordInput })
       });
       const data = await res.json();
       if (data.success) {
-        alert("All patients entirely deleted.");
-        fetchPatientRecords(1, '');
+        alert(isAll ? "All patients entirely deleted." : `Patient ${passwordModal.patientName} entirely deleted.`);
+        fetchPatientRecords(isAll ? 1 : patientPage, isAll ? '' : patientSearch);
       } else {
         alert("Delete failed: " + data.error);
       }
@@ -164,6 +157,7 @@ export default function AdminDashboard() {
       alert("Delete failed: " + err);
     } finally {
       setPatientLoading(false);
+      setPasswordInput('');
     }
   };
 
@@ -696,6 +690,52 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Password Security Modal ── */}
+      {passwordModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', borderRadius: '16px', width: '400px', textAlign: 'center', padding: '30px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }} className="animate-fade-in">
+            <div style={{ color: '#EF4444', marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+              <Trash2 size={48} />
+            </div>
+            <h2 style={{ marginBottom: '10px', fontSize: '24px', fontWeight: 'bold', color: '#0F172A' }}>Security Verification</h2>
+            <p style={{ color: '#64748B', marginBottom: '25px', fontSize: '14px' }}>
+              {passwordModal.type === 'ALL' 
+                ? 'You are about to permanently delete ALL patients and their associated records. This action cannot be undone.'
+                : `You are about to permanently delete patient ${passwordModal.patientName} and all associated records. This action cannot be undone.`
+              }
+            </p>
+            
+            <div style={{ marginBottom: '24px', textAlign: 'left' }}>
+              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '14px', color: '#334155' }}>Enter Master Password</label>
+              <input 
+                type="password" 
+                placeholder="••••••••" 
+                autoFocus
+                value={passwordInput}
+                onChange={e => setPasswordInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') confirmDelete(); }}
+                style={{ width: '100%', height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '0 15px', fontSize: '16px', outline: 'none' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <button 
+                onClick={() => { setPasswordModal({ isOpen: false, type: null }); setPasswordInput(''); }}
+                style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #E2E8F0', borderRadius: '8px', color: '#64748B', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                style={{ flex: 1, padding: '12px', background: '#EF4444', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Confirm Delete
+              </button>
             </div>
           </div>
         </div>
