@@ -20,7 +20,8 @@ import {
   UserSquare2,
   X,
   Clock,
-  Stethoscope
+  Stethoscope,
+  Trash2
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -117,6 +118,54 @@ export default function AdminDashboard() {
       setPatientLoading(false);
     }
   }, []);
+
+  const handleDeletePatient = async (patientId: string, patientName: string) => {
+    const pwd = prompt(`To entirely delete ${patientName} and all their records, enter password:`);
+    if (!pwd) return;
+    setPatientLoading(true);
+    try {
+      const res = await fetch(`/api/patients/${patientId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Patient ${patientName} entirely deleted.`);
+        fetchPatientRecords(patientPage, patientSearch);
+      } else {
+        alert("Delete failed: " + data.error);
+      }
+    } catch (err) {
+      alert("Delete failed: " + err);
+    } finally {
+      setPatientLoading(false);
+    }
+  };
+
+  const handleDeleteAllPatients = async () => {
+    const pwd = prompt("WARNING: To entirely delete ALL patients and all their records, enter password:");
+    if (!pwd) return;
+    setPatientLoading(true);
+    try {
+      const res = await fetch('/api/patients/delete-all', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("All patients entirely deleted.");
+        fetchPatientRecords(1, '');
+      } else {
+        alert("Delete failed: " + data.error);
+      }
+    } catch (err) {
+      alert("Delete failed: " + err);
+    } finally {
+      setPatientLoading(false);
+    }
+  };
 
   const fetchPatientHistory = async (patient: any) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -411,9 +460,19 @@ export default function AdminDashboard() {
           <div className="glass-card animate-fade-in">
             {/* Header + Search */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <div>
-                <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
-                <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
+              <div className="flex items-center gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
+                  <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
+                </div>
+                <button 
+                  onClick={handleDeleteAllPatients} 
+                  className="btn btn-outline flex items-center gap-1" 
+                  style={{ color: '#ef4444', borderColor: '#ef4444', padding: '6px 12px', fontSize: '13px' }} 
+                  title="Delete All Patients"
+                >
+                  <Trash2 size={16} /> Delete All
+                </button>
               </div>
               <div className="relative w-full sm:w-72">
                 <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
@@ -488,7 +547,16 @@ export default function AdminDashboard() {
                         {new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="py-3 px-3">
-                        <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>View →</span>
+                        <div className="flex items-center gap-3">
+                          <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>View →</span>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeletePatient(p.id, p.name); }} 
+                            style={{ background: '#FEE2E2', color: '#EF4444', padding: '6px', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex' }}
+                            title="Delete Patient Entirely"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
