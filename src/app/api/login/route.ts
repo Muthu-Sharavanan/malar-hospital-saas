@@ -47,7 +47,14 @@ export async function POST(req: Request) {
     }
 
     // Set a simple cookie (In a production app, use JWT and iron-session)
-    const displayName = customName || user.name;
+    let displayName = customName || user.name;
+    
+    // ENSURE CORRECT DOCTOR NAMES FOR DEMO
+    if (user.role === 'DOCTOR') {
+      if (email.includes('ramaswamy')) displayName = 'Ramaswamy';
+      else if (email.includes('aravind')) displayName = 'Aravind';
+    }
+
     const sessionData = JSON.stringify({ id: user.id, role: user.role, name: displayName });
     (await cookies()).set('session', sessionData, {
       httpOnly: true,

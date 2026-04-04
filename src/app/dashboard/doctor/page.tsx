@@ -315,11 +315,11 @@ export default function DoctorDashboard() {
                     )}
                   </div>
 
-                  {/* Prescription Section */}
+                  {/* Prescription Section (Neatly Aligned - Image 2) */}
                   <div className="mb-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
                     <label className="form-label">Prescription (E-Prescribe)</label>
                     
-                    <div className="flex flex-col gap-5 mb-4 p-5" style={{ background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                    <div className="flex flex-col gap-6 mb-4 p-5" style={{ background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                       <div>
                         <input 
                            type="text" className="form-input" style={{ width: '100%', marginBottom: '0' }} placeholder="Medicine Name (e.g. Paracetamol)" 
@@ -327,16 +327,16 @@ export default function DoctorDashboard() {
                         />
                       </div>
                       
-                      {/* Dosage Selection (Clicking Format) */}
+                      {/* Dosage Selection */}
                       <div>
-                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: 'bold', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dosage (Frequency)</div>
+                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Dosage (Frequency)</div>
                         <div className="flex flex-wrap gap-2">
                           {['1-0-1', '1-1-1', '1-0-0', '0-0-1', '1-1-1-1', 'SOS'].map(d => (
                             <button 
                               key={d} type="button" 
                               onClick={() => setCurrentDrug({...currentDrug, dosage: d})}
-                              className={`btn ${currentDrug.dosage === d ? 'btn-primary' : 'btn-outline'}`}
-                              style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
+                              className={`btn ${currentDrug.dosage === d ? 'btn-primary shadow-sm' : 'btn-outline border-slate-200'}`}
+                              style={{ fontSize: '11px', padding: '6px 14px', borderRadius: '8px' }}
                             >
                               {d}
                             </button>
@@ -344,16 +344,16 @@ export default function DoctorDashboard() {
                         </div>
                       </div>
 
-                      {/* Duration Selection (Clicking Format) */}
+                      {/* Duration Selection */}
                       <div>
-                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: 'bold', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duration (Days)</div>
+                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Duration (Days)</div>
                         <div className="flex flex-wrap gap-2">
                           {['1 Day', '3 Days', '5 Days', '1 Week', '10 Days', '2 Weeks', '1 Month'].map(dur => (
                             <button 
                               key={dur} type="button" 
                               onClick={() => setCurrentDrug({...currentDrug, duration: dur})}
-                              className={`btn ${currentDrug.duration === dur ? 'btn-secondary' : 'btn-outline'}`}
-                              style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px' }}
+                              className={`btn ${currentDrug.duration === dur ? 'btn-secondary shadow-sm' : 'btn-outline border-slate-200'}`}
+                              style={{ fontSize: '11px', padding: '6px 14px', borderRadius: '8px' }}
                             >
                               {dur}
                             </button>
@@ -361,12 +361,12 @@ export default function DoctorDashboard() {
                         </div>
                       </div>
 
-                      <button type="button" className="btn btn-primary" style={{ width: '100%', fontWeight: 'bold', padding: '12px' }} onClick={handleAddDrug}>
+                      <button type="button" className="btn btn-primary" style={{ width: '100%', fontWeight: 'bold', padding: '14px', borderRadius: '12px' }} onClick={handleAddDrug}>
                         <i className="fa-solid fa-plus mr-1"></i> Add to Prescription
                       </button>
                     </div>
 
-                    {/* Prescribed List */}
+                    {/* Prescribed List (Hidden duration text for neatness) */}
                     {drugs.length > 0 && (
                       <div className="mb-4">
                          {drugs.map((d, i) => (
