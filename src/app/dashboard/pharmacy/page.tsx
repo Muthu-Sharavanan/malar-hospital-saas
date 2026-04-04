@@ -8,7 +8,6 @@ export default function PharmacyPortal() {
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
   const [loading, setLoading] = useState(false);
-  const [prices, setPrices] = useState<Record<string, number>>({});
 
   const fetchPrescriptions = async () => {
     try {
@@ -47,13 +46,6 @@ export default function PharmacyPortal() {
 
   const handleDispense = async (visitId: string) => {
     const items = grouped[visitId].items;
-    const totalAmount = items.reduce((sum: number, item: any) => sum + (prices[item.id] || 0), 0);
-    
-    if (totalAmount === 0) {
-      alert("Please enter prices for the drugs.");
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await fetch('/api/pharmacy', {
@@ -61,13 +53,12 @@ export default function PharmacyPortal() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           visitId, 
-          prescriptionIds: items.map((i: any) => i.id),
-          totalAmount 
+          prescriptionIds: items.map((i: any) => i.id) 
         })
       });
       const data = await res.json();
       if (data.success) {
-        alert("Pharmacy bill generated! Patient must pay at reception.");
+        alert("Medications dispensed successfully!");
         setSelectedVisitId(null);
         fetchPrescriptions();
       }
@@ -82,7 +73,7 @@ export default function PharmacyPortal() {
     <div className="flex" style={{ minHeight: '100vh' }}>
       {/* Sidebar */}
       <aside style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px' }}>
-        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px' }}>Malar HMS</h2>
+        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px', fontWeight: 'bold', letterSpacing: '1px' }}>MALAR HOSPITAL</h2>
         <nav className="flex flex-col gap-4">
           <a href="#" className="flex items-center gap-2" style={{ color: 'white', fontWeight: 600 }}>
              Pharmacy Portal
@@ -97,12 +88,12 @@ export default function PharmacyPortal() {
         <header className="flex justify-between items-center mb-10">
           <div>
             <h1 style={{ fontSize: '28px', color: 'var(--primary)' }}>Welcome, {userName || 'Pharmacist'}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Dispense medications and manage pharmacy billing for the <strong style={{color: 'var(--secondary)'}}>{shift}</strong> shift.</p>
+            <p style={{ color: 'var(--text-muted)' }}>Dispense medications and manage clinical records for the <strong style={{color: 'var(--secondary)'}}>{shift}</strong> shift.</p>
           </div>
           <div className="flex items-center gap-4">
              <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thanjavur</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thoothukudi</div>
              </div>
           </div>
         </header>
@@ -137,11 +128,11 @@ export default function PharmacyPortal() {
             </div>
           </div>
 
-          {/* Pricing & Dispensing */}
+          {/* Medication Dispensing */}
           <div className="glass-card" style={{ width: '500px' }}>
             {selectedVisitId ? (
               <>
-                <h3 style={{ marginBottom: '10px' }}>Pricing & Dispensing</h3>
+                <h3 style={{ marginBottom: '10px' }}>Medication Dispensing</h3>
                 <p className="mb-6" style={{ color: 'var(--secondary)', fontWeight: 600 }}>
                   Patient: {grouped[selectedVisitId].visit?.patient?.name}
                 </p>
@@ -154,23 +145,18 @@ export default function PharmacyPortal() {
                           <span style={{ fontSize: '12px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px' }}>{item.dosage}</span>
                        </div>
                        <div className="flex justify-between items-center">
-                          <span style={{ fontSize: '12px' }}>Dur: {item.duration}</span>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--primary)' }}>Duration: {item.duration}</span>
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>{item.instructions}</span>
                        </div>
-                       <div className="flex justify-between items-center mt-2">
-                          <span style={{ fontSize: '12px', color: 'var(--primary)' }}>Price ₹</span>
-                          <input 
-                             type="number" className="form-input" style={{ width: '100px', padding: '5px' }} placeholder="0" 
-                             value={prices[item.id] || ''} onChange={e => setPrices({...prices, [item.id]: parseFloat(e.target.value)})}
-                          />
+                       <div style={{ marginTop: '10px', borderTop: '1px dashed #eee', paddingTop: '10px' }}>
+                          <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>* Verify medication batch before dispensing.</p>
                        </div>
                     </div>
                   ))}
 
                   <div className="mt-4 pt-4" style={{ borderTop: '2px solid var(--border)', textAlign: 'right' }}>
-                     <h4 className="mb-4">Total Amount: ₹{grouped[selectedVisitId].items.reduce((s: number, i: any) => s + (prices[i.id] || 0), 0)}</h4>
                      <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => handleDispense(selectedVisitId)} disabled={loading}>
-                        {loading ? "Processing..." : "Generate Pharmacy Bill & Dispense"}
+                        {loading ? "Processing..." : "Confirm Dispensing"}
                      </button>
                   </div>
                 </div>
