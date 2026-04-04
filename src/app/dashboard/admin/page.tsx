@@ -343,21 +343,8 @@ export default function AdminDashboard() {
 
               {/* Quick Actions / Summary */}
               <div className="flex flex-col gap-6">
-                  <div className="glass-card bg-primary text-white overflow-hidden relative">
-                    <div className="relative z-10">
-                        <h4 className="text-lg font-bold mb-2">Weekly Goal</h4>
-                        <p className="text-white-70 text-sm mb-6">You've reached 84% of your monthly revenue target.</p>
-                        <div className="w-full h-2 bg-white-20 rounded-full mb-2">
-                          <div className="w-[84%] h-full bg-accent rounded-full shadow-lg shadow-accent-20"></div>
-                        </div>
-                        <div className="flex justify-between text-xs font-bold uppercase tracking-wider">
-                          <span>Progress</span>
-                          <span>84%</span>
-                        </div>
-                    </div>
-                    {/* Decorative Circle */}
-                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-                  </div>
+                  {/* Weekly Goal Revenue Card hidden per client request */}
+
 
                   <div className="glass-card flex flex-col gap-4">
                     <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Efficiency Metrics</h4>
