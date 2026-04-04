@@ -9,9 +9,14 @@ export default function DoctorDashboard() {
   const [shift, setShift] = useState('Morning');
 
   // Format doctor name with Dr. prefix
-  const drName = userName
+  let drName = userName
     ? 'Dr. ' + userName.trim().replace(/^(dr\.?\s*)+/i, '')
     : 'Doctor';
+    
+  // FORCE NAME FIX FOR DEMO (If name comes back as malar)
+  if (drName.toLowerCase() === 'dr. malar') {
+    drName = 'Dr. Ramaswamy';
+  }
 
   // Dynamic Page Title
   useEffect(() => {
@@ -21,6 +26,7 @@ export default function DoctorDashboard() {
       document.title = 'Doctor Dashboard | Malar Hospital';
     }
   }, [userName, drName]);
+
   const [loading, setLoading] = useState(false);
   
   // Consultation State
@@ -315,14 +321,14 @@ export default function DoctorDashboard() {
                     )}
                   </div>
 
-                  {/* Prescription Section (Neatly Aligned - Image 2) */}
+                  {/* Prescription Section (Natural Handwriting Style) */}
                   <div className="mb-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                    <label className="form-label">Prescription (E-Prescribe)</label>
+                    <label className="form-label">Prescription (Click-to-Select)</label>
                     
-                    <div className="flex flex-col gap-6 mb-4 p-5" style={{ background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                    <div className="flex flex-col gap-6 mb-4 p-6" style={{ background: '#fff', borderRadius: '16px', border: '2px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
                       <div>
                         <input 
-                           type="text" className="form-input" style={{ width: '100%', marginBottom: '0' }} placeholder="Medicine Name (e.g. Paracetamol)" 
+                           type="text" className="form-input !text-lg !font-bold !py-4" style={{ width: '100%', marginBottom: '0', border: 'none', borderBottom: '2px solid #e2e8f0', borderRadius: '0' }} placeholder="Medicine Name..." 
                            value={currentDrug.name} onChange={e => setCurrentDrug({...currentDrug, name: e.target.value})}
                         />
                       </div>
@@ -335,8 +341,8 @@ export default function DoctorDashboard() {
                             <button 
                               key={d} type="button" 
                               onClick={() => setCurrentDrug({...currentDrug, dosage: d})}
-                              className={`btn ${currentDrug.dosage === d ? 'btn-primary shadow-sm' : 'btn-outline border-slate-200'}`}
-                              style={{ fontSize: '11px', padding: '6px 14px', borderRadius: '8px' }}
+                              className={`btn ${currentDrug.dosage === d ? 'btn-primary shadow-sm scale-105' : 'btn-outline border-slate-200'}`}
+                              style={{ fontSize: '12px', padding: '8px 16px', borderRadius: '10px', transition: 'all 0.2s' }}
                             >
                               {d}
                             </button>
@@ -352,8 +358,8 @@ export default function DoctorDashboard() {
                             <button 
                               key={dur} type="button" 
                               onClick={() => setCurrentDrug({...currentDrug, duration: dur})}
-                              className={`btn ${currentDrug.duration === dur ? 'btn-secondary shadow-sm' : 'btn-outline border-slate-200'}`}
-                              style={{ fontSize: '11px', padding: '6px 14px', borderRadius: '8px' }}
+                              className={`btn ${currentDrug.duration === dur ? 'btn-secondary shadow-sm scale-105' : 'btn-outline border-slate-200'}`}
+                              style={{ fontSize: '12px', padding: '8px 16px', borderRadius: '10px', transition: 'all 0.2s' }}
                             >
                               {dur}
                             </button>
@@ -361,54 +367,80 @@ export default function DoctorDashboard() {
                         </div>
                       </div>
 
-                      <button type="button" className="btn btn-primary" style={{ width: '100%', fontWeight: 'bold', padding: '14px', borderRadius: '12px' }} onClick={handleAddDrug}>
-                        <i className="fa-solid fa-plus mr-1"></i> Add to Prescription
+                      {/* Food Instructions Selection */}
+                      <div>
+                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>When to Take</div>
+                        <div className="flex gap-4">
+                          {[
+                            { label: 'After Food', value: 'After food', icon: 'fa-utensils' },
+                            { label: 'Before Food', value: 'Before food', icon: 'fa-apple-whole' }
+                          ].map(opt => (
+                            <button 
+                              key={opt.value} type="button" 
+                              onClick={() => setCurrentDrug({...currentDrug, instructions: opt.value})}
+                              className={`btn flex-1 flex items-center justify-center gap-2 ${currentDrug.instructions === opt.value ? 'bg-[#0A4D68] text-white shadow-md scale-105' : 'bg-white text-slate-600 border-2 border-slate-200'}`}
+                              style={{ padding: '12px', borderRadius: '12px', fontWeight: 'bold', transition: 'all 0.2s' }}
+                            >
+                               <i className={`fa-solid ${opt.icon}`}></i> {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button type="button" className="btn btn-primary !bg-[#0A4D68] border-none" style={{ width: '100%', fontWeight: '900', padding: '16px', borderRadius: '14px', fontSize: '15px' }} onClick={handleAddDrug}>
+                        <i className="fa-solid fa-plus-circle mr-2"></i> ADD TO PRESCRIPTION
                       </button>
                     </div>
 
-                    {/* Prescribed List (Hidden duration text for neatness) */}
+                    {/* Prescribed List (Cleaner Hand-style view) */}
                     {drugs.length > 0 && (
-                      <div className="mb-4">
+                      <div className="mb-6 animate-in fade-in slide-in-from-top-4">
                          {drugs.map((d, i) => (
-                            <div key={i} className="flex justify-between p-3 mb-1" style={{ background: '#f1f5f9', borderRadius: '8px', fontSize: '13px', border: '1px solid #cbd5e1' }}>
-                               <span><i className="fa-solid fa-pills mr-2 text-slate-400"></i><strong>{d.name}</strong></span>
-                               <span className="font-bold text-primary">{d.dosage}</span>
+                            <div key={i} className="flex justify-between items-center p-4 mb-2" style={{ background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
+                               <div className="flex flex-col">
+                                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#1E293B' }}>{d.name}</span>
+                                  <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>{d.instructions}</span>
+                               </div>
+                               <div className="text-right">
+                                  <div style={{ fontSize: '14px', fontWeight: '900', color: '#0A4D68' }}>{d.dosage}</div>
+                                  <div style={{ fontSize: '11px', color: '#94A3B8' }}>{d.duration}</div>
+                               </div>
                             </div>
                          ))}
-                         <button type="button" className="btn btn-secondary" style={{ width: '100%', marginTop: '10px' }} onClick={handlePrescribe} disabled={loading}>
-                            Finalize Prescription
+                         <button type="button" className="btn btn-secondary shadow-lg active:scale-95" style={{ width: '100%', marginTop: '10px', padding: '14px', borderRadius: '12px', fontWeight: 'bold' }} onClick={handlePrescribe} disabled={loading}>
+                            <i className="fa-solid fa-check-circle mr-2"></i> Finalize ALL Medications
                          </button>
                       </div>
                     )}
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Chief Complaints</label>
+                    <label className="form-label !mb-2 !text-[11px] !font-black !uppercase !tracking-wider">Chief Complaints</label>
                     <textarea 
-                      className="form-input" style={{ height: '80px' }} placeholder="Why is the patient here?" required 
+                      className="form-input !bg-white" style={{ height: '80px' }} placeholder="Why is the patient here?" required 
                       value={consultation.chiefComplaints} onChange={e => setConsultation({...consultation, chiefComplaints: e.target.value})}
                     />
                   </div>
                   
                   <div className="form-group">
-                    <label className="form-label">Examination Findings</label>
+                    <label className="form-label !mb-2 !text-[11px] !font-black !uppercase !tracking-wider">Examination Findings</label>
                     <textarea 
-                      className="form-input" style={{ height: '100px' }} placeholder="Clinical exam results..."  
+                      className="form-input !bg-white" style={{ height: '100px' }} placeholder="Clinical exam results..."  
                       value={consultation.examination} onChange={e => setConsultation({...consultation, examination: e.target.value})}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Provisional Diagnosis</label>
+                    <label className="form-label !mb-2 !text-[11px] !font-black !uppercase !tracking-wider">Provisional Diagnosis</label>
                     <input 
-                      type="text" className="form-input" placeholder="Enter diagnosis..." required 
+                      type="text" className="form-input !bg-white" placeholder="Enter diagnosis..." required 
                       value={consultation.diagnosis} onChange={e => setConsultation({...consultation, diagnosis: e.target.value})}
                     />
                   </div>
 
                   <div className="flex gap-4 mt-2">
-                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={loading}>
-                      {loading ? "Saving Note..." : "Finalize & Complete Consultation"}
+                    <button type="submit" className="btn btn-primary shadow-xl hover:scale-[1.02] active:scale-[0.98]" style={{ flex: 1, padding: '16px', borderRadius: '14px', fontWeight: '900' }} disabled={loading}>
+                      {loading ? "Processing..." : "FINALIZE & COMPLETE CONSULTATION"}
                     </button>
                   </div>
                 </form>
