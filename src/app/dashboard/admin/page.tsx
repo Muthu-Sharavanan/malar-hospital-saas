@@ -454,31 +454,31 @@ export default function AdminDashboard() {
           <div className="glass-card animate-fade-in">
             {/* Header + Search */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <div className="flex items-center gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
-                  <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
+                <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="relative w-full sm:w-72">
+                  <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                  <input
+                    type="text"
+                    placeholder="Search name, phone, UHID..."
+                    value={patientSearch}
+                    onChange={e => {
+                      setPatientSearch(e.target.value);
+                      fetchPatientRecords(1, e.target.value);
+                    }}
+                    style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B' }}
+                  />
                 </div>
                 <button 
                   onClick={handleDeleteAllPatients} 
-                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '8px', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex' }}
+                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '0', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', flexShrink: 0 }}
                   title="Delete All Patients (Requires Password)"
                 >
                   <Trash2 size={18} />
                 </button>
-              </div>
-              <div className="relative w-full sm:w-72">
-                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                <input
-                  type="text"
-                  placeholder="Search name, phone, UHID..."
-                  value={patientSearch}
-                  onChange={e => {
-                    setPatientSearch(e.target.value);
-                    fetchPatientRecords(1, e.target.value);
-                  }}
-                  style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B' }}
-                />
               </div>
             </div>
 
