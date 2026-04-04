@@ -12,6 +12,15 @@ export default function DoctorDashboard() {
   const drName = userName
     ? 'Dr. ' + userName.trim().replace(/^(dr\.?\s*)+/i, '')
     : 'Doctor';
+
+  // Dynamic Page Title
+  useEffect(() => {
+    if (userName) {
+      document.title = `${drName} | Malar Hospital`;
+    } else {
+      document.title = 'Doctor Dashboard | Malar Hospital';
+    }
+  }, [userName, drName]);
   const [loading, setLoading] = useState(false);
   
   // Consultation State
@@ -147,7 +156,7 @@ export default function DoctorDashboard() {
     <div className="flex" style={{ minHeight: '100vh' }}>
       {/* Sidebar */}
       <aside style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px' }}>
-        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px' }}>Malar HMS</h2>
+        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px', fontWeight: 'bold', letterSpacing: '1px' }}>MALAR HOSPITAL</h2>
         <nav className="flex flex-col gap-4">
           <a href="#" className="flex items-center gap-2" style={{ color: 'white', fontWeight: 600 }}>
             <i className="fa-solid fa-stethoscope"></i> {drName}
