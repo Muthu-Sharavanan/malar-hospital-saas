@@ -273,16 +273,7 @@ export default function AdminDashboard() {
           </div>
         </nav>
 
-        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <button 
-             onClick={handleLiveReset}
-             style={{ width: '100%', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', borderRadius: '12px', cursor: 'pointer', transition: '0.2s', fontSize: '13px', fontWeight: 'bold' }}
-             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-             onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-          >
-             <Activity size={16} /> 
-             <span>Live Reset</span>
-          </button>
+        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <LogoutButton />
         </div>
       </aside>
