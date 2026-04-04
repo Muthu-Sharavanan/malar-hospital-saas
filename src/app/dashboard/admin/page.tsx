@@ -465,7 +465,7 @@ export default function AdminDashboard() {
                 </div>
                 <button 
                   onClick={handleDeleteAllPatients} 
-                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '0', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', flexShrink: 0 }}
+                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '0', margin: '0', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', flexShrink: 0, transform: 'translateY(-2px)' }}
                   title="Delete All Patients (Requires Password)"
                 >
                   <Trash2 size={18} />
