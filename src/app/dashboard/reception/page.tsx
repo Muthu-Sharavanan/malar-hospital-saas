@@ -158,6 +158,7 @@ export default function ReceptionDashboard() {
   };
 
   const selectPatient = (patient: any) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setSelectedPatient(patient);
     setFormData({
       ...formData,
@@ -318,6 +319,7 @@ export default function ReceptionDashboard() {
             <span style={{ fontWeight: activeTab === 'doctors' ? '600' : '400' }}>Doctors List</span>
           </button>
 
+{/* Hiding Billing Center as per client request
           <button 
              onClick={() => setActiveTab('billing')}
              style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeTab === 'billing' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
@@ -325,6 +327,7 @@ export default function ReceptionDashboard() {
             <i className="fa-solid fa-file-invoice-dollar" style={{ width: '20px', opacity: activeTab === 'billing' ? 1 : 0.6, fontSize: '16px' }}></i>
             <span style={{ fontWeight: activeTab === 'billing' ? '600' : '400' }}>Billing Center</span>
           </button>
+          */ }
         </nav>
 
         <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -699,10 +702,17 @@ export default function ReceptionDashboard() {
               </div>
 
               <div className="form-group">
-                <label className="text-sm font-semibold text-gray-600 uppercase tracking-wider" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>AGE</label>
+                <label htmlFor="age" className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>AGE</label>
                 <input 
-                  type="number" className="form-input" placeholder="e.g. 35" required
-                  value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})}
+                  id="age"
+                  name="age"
+                  type="text" 
+                  inputMode="numeric"
+                  className="form-input" 
+                  placeholder="e.g. 35" 
+                  required
+                  value={formData.age} 
+                  onChange={e => setFormData({...formData, age: e.target.value})}
                   style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
                 />
               </div>
@@ -755,10 +765,7 @@ export default function ReceptionDashboard() {
                 </select>
               </div>
 
-              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '30px', borderTop: '1px solid #F1F5F9' }}>
-                <div style={{ background: '#FFF7ED', color: '#C2410C', padding: '8px 20px', borderRadius: '50px', fontSize: '14px', fontWeight: 'bold' }}>
-                  FEE: ₹{formData.doctorId ? '200' : '0'}
-                </div>
+              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px', paddingTop: '30px', borderTop: '1px solid #F1F5F9' }}>
                 <button 
                   type="submit" 
                   disabled={loading}
@@ -798,7 +805,7 @@ export default function ReceptionDashboard() {
                       <div style={{ fontWeight: 'bold' }}>{v.patient.name}</div>
                       <div style={{ fontSize: '11px', color: 'var(--primary)' }}>{v.patient.uhid}</div>
                     </td>
-                    <td style={{ padding: '12px' }}>{v.doctor.name}</td>
+                    <td style={{ padding: '12px' }}>{`Dr. ${v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}`}</td>
                     <td style={{ padding: '12px' }}>
                       <span className={`badge ${
                         v.status === 'REGISTERED' ? 'badge-warning' : 
@@ -824,6 +831,7 @@ export default function ReceptionDashboard() {
                         <i className="fa-solid fa-clock-rotate-left mr-1"></i> View History
                       </button>
                       
+                      {/* Hiding Surgery Bill button
                       <button 
                         className="btn btn-primary" 
                         style={{ padding: '5px 10px', fontSize: '12px', marginLeft: '5px' }}
@@ -843,6 +851,7 @@ export default function ReceptionDashboard() {
                       >
                         + Surgery Bill
                       </button>
+                      */}
                     </td>
                   </tr>
                 )) : (

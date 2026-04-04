@@ -27,12 +27,12 @@ export default function DoctorDashboard() {
   const [currentDrug, setCurrentDrug] = useState({ name: '', dosage: '1-0-1', duration: '5 days', instructions: 'After food' });
 
   const commonTests = [
-    { name: 'CBC (Complete Blood Count)', price: 350, category: 'Hematology' },
-    { name: 'RBS (Random Blood Sugar)', price: 100, category: 'Biochemistry' },
-    { name: 'Liver Function Test (LFT)', price: 750, category: 'Biochemistry' },
-    { name: 'Kidney Function Test (KFT)', price: 750, category: 'Biochemistry' },
-    { name: 'Lipid Profile', price: 900, category: 'Biochemistry' },
-    { name: 'Urine Routine', price: 150, category: 'Clinical Pathology' }
+    { name: 'CBC (Complete Blood Count)', category: 'Hematology' },
+    { name: 'RBS (Random Blood Sugar)', category: 'Biochemistry' },
+    { name: 'Liver Function Test (LFT)', category: 'Biochemistry' },
+    { name: 'Kidney Function Test (KFT)', category: 'Biochemistry' },
+    { name: 'Lipid Profile', category: 'Biochemistry' },
+    { name: 'Urine Routine', category: 'Clinical Pathology' }
   ];
 
   const handleAddDrug = () => {
@@ -81,7 +81,7 @@ export default function DoctorDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Lab tests ordered! Patient must pay at reception.");
+        alert("Lab tests ordered successfully!");
         setSelectedTests([]);
       }
     } catch (err) {
@@ -207,7 +207,7 @@ export default function DoctorDashboard() {
                 >
                   <div>
                     <span style={{ fontWeight: 'bold', display: 'block' }}>#{v.tokenNumber} - {v.patient.name}</span>
-                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{v.patient.age}Y | {v.patient.gender} | {v.doctor.name}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{v.patient.age}Y | {v.patient.gender} | Dr. {v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}</span>
                   </div>
                   <span className={`badge ${v.status === 'CONSULTING' ? 'badge-primary' : 'badge-success'}`}>
                     {v.status === 'CONSULTING' ? 'IN PROGRESS' : 'READY'}
@@ -320,7 +320,7 @@ export default function DoctorDashboard() {
                     </div>
                     {selectedTests.length > 0 && (
                       <button type="button" className="btn btn-accent" style={{ fontSize: '13px', width: '100%', marginBottom: '20px' }} onClick={handleOrderLabs} disabled={loading}>
-                        Place Lab Order (₹{selectedTests.reduce((s,t)=>s+t.price,0)})
+                        Place Lab Order ({selectedTests.length} tests)
                       </button>
                     )}
                   </div>

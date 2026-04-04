@@ -59,6 +59,25 @@ export default function AdminDashboard() {
   const [historyVisits, setHistoryVisits] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  const handleLiveReset = async () => {
+    if (!confirm("⚠️ LIVE RESET: This will clear all test data and prepare professional demo patients. Continue?")) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/seed');
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ RESET SUCCESSFUL! Redirecting to login...");
+        window.location.href = '/';
+      } else {
+        alert("Reset failed: " + data.error);
+      }
+    } catch (err) {
+      alert("Reset failed: " + err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/admin/stats');
@@ -100,6 +119,7 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchPatientHistory = async (patient: any) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setHistoryPatient(patient);
     setShowHistoryModal(true);
     setHistoryLoading(true);
@@ -210,7 +230,16 @@ export default function AdminDashboard() {
           </div>
         </nav>
 
-        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <button 
+             onClick={handleLiveReset}
+             style={{ width: '100%', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', borderRadius: '12px', cursor: 'pointer', transition: '0.2s', fontSize: '13px', fontWeight: 'bold' }}
+             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+             onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+          >
+             <Activity size={16} /> 
+             <span>Live Reset</span>
+          </button>
           <LogoutButton />
         </div>
       </aside>
@@ -259,6 +288,7 @@ export default function AdminDashboard() {
           <>
             {/* KPI Cards Row */}
             <div className="responsive-grid responsive-grid-2 lg:grid-cols-4 gap-6 mb-10">
+              {/* Hiding Revenue Card
               <StatCard 
                   label="Today's Revenue" 
                   value={`₹${stats?.totalCollection?.toLocaleString() || 0}`} 
@@ -266,6 +296,7 @@ export default function AdminDashboard() {
                   trend={revenueGrowth} 
                   isPositive={parseFloat(revenueGrowth as string) >= 0}
               />
+              */}
               <StatCard 
                   label="Patient Registrations" 
                   value={stats?.totalPatients || 0} 
@@ -273,6 +304,7 @@ export default function AdminDashboard() {
                   trend={stats?.totalPatientsMonth || 0}
                   trendLabel="this month"
               />
+              {/* Hiding financial collection cards
               <StatCard 
                   label="Monthly Collection" 
                   value={`₹${stats?.monthlyCollection?.toLocaleString() || 0}`} 
@@ -283,138 +315,31 @@ export default function AdminDashboard() {
                   value={`₹${stats?.totalPatients > 0 ? (stats.totalCollection / stats.totalPatients).toFixed(0) : 0}`} 
                   icon={<Activity className="text-accent" />} 
               />
+              */}
             </div>
 
+            {/* Hiding Financial Charts Row
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-              {/* Revenue Trend Chart */}
               <div className="lg:col-span-2 glass-card overflow-hidden !p-0">
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white-50">
-                  <div>
-                      <h3 className="text-lg font-bold text-slate-800">Revenue Trend</h3>
-                      <p className="text-xs text-slate-500 lowercase tracking-wide">Daily collection for the last 7 days</p>
-                  </div>
-                  <div className="text-xs font-semibold px-3 py-1 bg-primary/5 text-primary rounded-full uppercase tracking-widest cursor-pointer hover:bg-primary/10 transition-colors">7 Days View</div>
-                </div>
-                <div className="p-6 chart-container bg-white">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={stats?.sevenDayTrend || []}>
-                        <defs>
-                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#0A4D68" stopOpacity={0.1}/>
-                            <stop offset="95%" stopColor="#0A4D68" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis 
-                          dataKey="date" 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{fontSize: 10, fill: '#64748b'}} 
-                          dy={10}
-                        />
-                        <YAxis 
-                          axisLine={false} 
-                          tickLine={false} 
-                          tick={{fontSize: 10, fill: '#64748b'}} 
-                          tickFormatter={(value) => `₹${value >= 1000 ? (value/1000)+'k' : value}`}
-                        />
-                        <Tooltip 
-                          contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '12px'}}
-                          formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Revenue']}
-                        />
-                        <Area type="monotone" dataKey="amount" stroke="#0A4D68" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                </div>
+                ... 
               </div>
-
-              {/* Department Breakdown */}
-              <div className="glass-card flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-white to-slate-50">
-                <h3 className="text-lg font-bold text-slate-800 mb-6 w-full text-left">Department Load</h3>
-                <div className="w-full chart-container">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={stats?.breakdown ? Object.entries(stats.breakdown).map(([name, value]) => ({ name, value })) : []}
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {Object.entries(stats?.breakdown || {}).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mt-6 w-full text-left">
-                    {Object.entries(stats?.breakdown || {}).map(([type, amount]: any, index: number) => (
-                      <div key={type} className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ background: COLORS[index % COLORS.length] }}></div>
-                          <span className="text-[10px] font-bold text-slate-500 tracking-wide uppercase">{type}</span>
-                        </div>
-                        <span className="text-sm font-bold text-slate-800 pl-4">₹{amount.toLocaleString()}</span>
-                      </div>
-                    ))}
-                </div>
+              <div className="glass-card flex ...">
+                ...
               </div>
             </div>
+            */}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Recent Activity */}
+              {/* Hiding Transaction Stream
               <div className="lg:col-span-2 glass-card">
-                  <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-lg font-bold text-slate-800">Transaction Stream</h3>
-                    <button className="text-xs font-bold text-primary hover:underline">View All</button>
+                  <div className="flex ...">
+                    ...
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-100 border-collapse">
-                      <thead>
-                        <tr className="text-left text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] border-b border-slate-100 pb-4">
-                          <th className="pb-4">Patient & Description</th>
-                          <th className="pb-4">Type</th>
-                          <th className="pb-4">Amount</th>
-                          <th className="pb-4">Mode</th>
-                          <th className="pb-4">Timestamp</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stats?.recentActivity?.length > 0 ? stats.recentActivity.map((activity: any) => (
-                          <tr key={activity.id} className="group hover:bg-slate-50-50 transition-colors">
-                            <td className="py-4">
-                              <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
-                                    {activity.patientName.charAt(0)}
-                                  </div>
-                                  <span className="font-semibold text-slate-700">{activity.patientName}</span>
-                              </div>
-                            </td>
-                            <td className="py-4">
-                              <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                                activity.type === 'CONSULTATION' ? 'bg-blue-50 text-blue-600' : 
-                                activity.type === 'LAB' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-600'
-                              }`}>
-                                {activity.type}
-                              </span>
-                            </td>
-                            <td className="py-4 font-bold text-slate-800">₹{activity.amount}</td>
-                            <td className="py-4 text-xs font-medium text-slate-500">{activity.paymentMode || 'CASH'}</td>
-                            <td className="py-4 text-xs font-medium text-slate-400">
-                              {new Date(activity.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </td>
-                          </tr>
-                        )) : (
-                          <tr>
-                            <td colSpan={5} className="py-10 text-center text-slate-400 italic">No transactions detected today.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                    ...
                   </div>
               </div>
+              */}
 
               {/* Quick Actions / Summary */}
               <div className="flex flex-col gap-6">
