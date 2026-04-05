@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
 import LogoutButton from '@/components/LogoutButton';
 
 export default function DoctorDashboard() {
@@ -7,6 +8,10 @@ export default function DoctorDashboard() {
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
+
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [allAppointments, setAllAppointments] = useState<any[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Format doctor name with Dr. prefix
   let drName = userName
@@ -116,6 +121,16 @@ export default function DoctorDashboard() {
     }
   };
 
+  const fetchAllAppointments = async () => {
+    try {
+      const res = await fetch(`/api/appointments?t=${Date.now()}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success) setAllAppointments(data.visits);
+    } catch (err) {
+      console.error("Failed to fetch all appointments", err);
+    }
+  };
+
   const fetchSession = async () => {
     try {
       const res = await fetch('/api/me');
@@ -132,6 +147,7 @@ export default function DoctorDashboard() {
   useEffect(() => {
     fetchSession();
     fetchDoctorQueue();
+    fetchAllAppointments();
   }, []);
 
   const handleSubmitConsult = async (e: React.FormEvent) => {
@@ -150,6 +166,7 @@ export default function DoctorDashboard() {
         setSelectedVisit(null);
         setConsultation({ chiefComplaints: '', history: '', examination: '', diagnosis: '' });
         fetchDoctorQueue();
+        fetchAllAppointments();
       }
     } catch (err) {
       alert("Failed to save consultation");
@@ -167,8 +184,11 @@ export default function DoctorDashboard() {
           <a href="#" className="flex items-center gap-2" style={{ color: 'white', fontWeight: 600 }}>
             <i className="fa-solid fa-stethoscope"></i> {drName}
           </a>
-          <a href="#" className="flex items-center gap-2" style={{ color: 'white', opacity: 0.7 }}>
+          <a href="#" className="flex items-center gap-2" style={{ color: 'white', opacity: !showCalendar ? 1 : 0.7 }} onClick={(e) => { e.preventDefault(); setShowCalendar(false); }}>
              OPD Patients
+          </a>
+          <a href="#" className="flex items-center gap-2" style={{ color: 'white', opacity: showCalendar ? 1 : 0.7 }} onClick={(e) => { e.preventDefault(); setShowCalendar(true); fetchAllAppointments(); }}>
+             <i className="fa-regular fa-calendar" style={{ width: '16px' }}></i> Appointments Calendar
           </a>
           
           <LogoutButton />
@@ -190,8 +210,79 @@ export default function DoctorDashboard() {
           </div>
         </header>
 
-        <div className="flex gap-6">
-          {/* Waiting List */}
+        {showCalendar ? (
+          <div className="glass-card fade-in" style={{ padding: '30px' }}>
+             <div className="flex justify-between items-center mb-6">
+                <h2 style={{ fontSize: '24px', color: 'var(--primary)', fontWeight: 'bold' }}>
+                   {format(currentMonth, 'MMMM yyyy')}
+                </h2>
+                <div className="flex gap-2">
+                   <button className="btn btn-outline" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                     <i className="fa-solid fa-chevron-left"></i>
+                   </button>
+                   <button className="btn btn-outline" onClick={() => setCurrentMonth(new Date())}>
+                     Today
+                   </button>
+                   <button className="btn btn-outline" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                     <i className="fa-solid fa-chevron-right"></i>
+                   </button>
+                </div>
+             </div>
+
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>{day}</div>
+                ))}
+                
+                {eachDayOfInterval({ start: startOfWeek(startOfMonth(currentMonth)), end: endOfWeek(endOfMonth(currentMonth)) }).map(day => {
+                   const dayVisits = allAppointments.filter(v => isSameDay(new Date(v.visitDate), day));
+                   const isPending = dayVisits.some(v => v.status !== 'COMPLETED');
+                   const isCurrentMonth = isSameMonth(day, currentMonth);
+
+                   return (
+                     <div key={day.toString()} style={{ 
+                       minHeight: '100px', 
+                       background: 'white', 
+                       border: `2px solid ${isSameDay(day, new Date()) ? 'var(--primary)' : 'var(--border)'}`, 
+                       borderRadius: '8px', 
+                       padding: '8px',
+                       opacity: isCurrentMonth ? 1 : 0.4
+                     }}>
+                        <div style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '14px', 
+                          marginBottom: '8px',
+                          color: isPending ? '#dc2626' : 'inherit' // Red if pending appointments
+                        }}>
+                           {format(day, 'd')}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                           {dayVisits.map(v => (
+                              <div key={v.id} style={{ 
+                                fontSize: '11px', 
+                                padding: '3px 6px', 
+                                background: v.status === 'COMPLETED' ? '#dcfce7' : '#fee2e2',
+                                color: v.status === 'COMPLETED' ? '#166534' : '#991b1b',
+                                border: `1px solid ${v.status === 'COMPLETED' ? '#bbf7d0' : '#fecaca'}`,
+                                borderRadius: '4px',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }} title={`${v.patient.name} - ${v.status}`}>
+                                 {v.status === 'COMPLETED' ? '🟢 ' : '🔴 '}
+                                 {v.patient.name}
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                   );
+                })}
+             </div>
+          </div>
+        ) : (
+          <div className="flex gap-6 fade-in">
+            {/* Waiting List */}
           <div className="glass-card" style={{ flex: 1 }}>
             <h3 style={{ marginBottom: '20px' }}>Today's Patients</h3>
             <div className="flex flex-col gap-3">
@@ -451,7 +542,8 @@ export default function DoctorDashboard() {
               </div>
             )}
           </div>
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );

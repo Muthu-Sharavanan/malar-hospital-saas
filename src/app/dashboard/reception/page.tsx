@@ -11,6 +11,7 @@ export default function ReceptionDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [queue, setQueue] = useState<any[]>([]);
+  const [futureQueue, setFutureQueue] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
   
   // Billing Modal State
@@ -51,7 +52,8 @@ export default function ReceptionDashboard() {
     gender: 'Male',
     address: '',
     doctorId: '',
-    patientId: ''
+    patientId: '',
+    visitDate: ''
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,6 +88,21 @@ export default function ReceptionDashboard() {
       if (data.success) setQueue(data.visits || data.queue || []);
     } catch (err) {
       console.error("Failed to fetch queue", err);
+    }
+  };
+
+  const fetchFutureQueue = async () => {
+    try {
+      const res = await fetch('/api/appointments');
+      const data = await res.json();
+      if (data.success) {
+        const midnightToday = new Date();
+        midnightToday.setHours(23, 59, 59, 999);
+        const upcoming = data.visits.filter((v: any) => new Date(v.visitDate) > midnightToday);
+        setFutureQueue(upcoming);
+      }
+    } catch (err) {
+      console.error("Failed to fetch future queue", err);
     }
   };
 
@@ -182,7 +199,8 @@ export default function ReceptionDashboard() {
       age: '',
       gender: 'Male',
       doctorId: '',
-      address: ''
+      address: '',
+      visitDate: ''
     });
     setSearchQuery('');
   };
@@ -194,6 +212,7 @@ export default function ReceptionDashboard() {
   useEffect(() => {
     if (activeTab === 'register') fetchDoctors();
     if (activeTab === 'queue') fetchQueue();
+    if (activeTab === 'future') fetchFutureQueue();
     if (activeTab === 'billing') {
       fetchBills();
       fetchDoctors();
@@ -219,10 +238,15 @@ export default function ReceptionDashboard() {
         });
         setShowSuccessModal(true);
         setSelectedPatient(null);
-        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '' });
+        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', visitDate: '' });
         setSearchQuery('');
-        setActiveTab('queue'); 
-        fetchQueue();
+        if (formData.visitDate) {
+          setActiveTab('future');
+          fetchFutureQueue();
+        } else {
+          setActiveTab('queue'); 
+          fetchQueue();
+        }
       } else if (res.status === 409) {
         setDuplicateInfo({ name: formData.name, uhid: data.uhid });
         setShowDuplicateModal(true);
@@ -309,6 +333,14 @@ export default function ReceptionDashboard() {
           >
             <i className="fa-solid fa-list-ol" style={{ width: '20px', opacity: activeTab === 'queue' ? 1 : 0.6, fontSize: '16px' }}></i>
             <span style={{ fontWeight: activeTab === 'queue' ? '600' : '400' }}>Today's Queue</span>
+          </button>
+
+          <button 
+             onClick={() => setActiveTab('future')}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeTab === 'future' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <i className="fa-regular fa-calendar-check" style={{ width: '20px', opacity: activeTab === 'future' ? 1 : 0.6, fontSize: '16px' }}></i>
+            <span style={{ fontWeight: activeTab === 'future' ? '600' : '400' }}>Future Bookings</span>
           </button>
 
           <button 
@@ -754,7 +786,7 @@ export default function ReceptionDashboard() {
                 />
               </div>
 
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <div className="form-group">
                 <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>CONSULTING DOCTOR</label>
                 <select 
                   className="form-input" required
@@ -773,6 +805,21 @@ export default function ReceptionDashboard() {
                     );
                   })}
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                  <i className="fa-regular fa-calendar" style={{ marginRight: '6px' }}></i> APPOINTMENT DATE
+                </label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  min={new Date().toISOString().split('T')[0]}
+                  value={formData.visitDate} 
+                  onChange={e => setFormData({...formData, visitDate: e.target.value})}
+                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                />
+                <span style={{ fontSize: '11px', color: '#94A3B8', marginTop: '4px', display: 'block' }}>Leave empty for Today</span>
               </div>
 
               <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px', paddingTop: '30px', borderTop: '1px solid #F1F5F9' }}>
@@ -868,6 +915,54 @@ export default function ReceptionDashboard() {
                   <tr>
                     <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       No patients in queue yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'future' && (
+          <div className="glass-card animate-fade-in" style={{ width: '100%' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3>Future Bookings</h3>
+              <button className="btn btn-outline" style={{ fontSize: '12px' }} onClick={fetchFutureQueue}>Refresh</button>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px' }}>Date</th>
+                  <th style={{ padding: '12px' }}>Patient</th>
+                  <th style={{ padding: '12px' }}>Doctor</th>
+                  <th style={{ padding: '12px' }}>Scheduled Token</th>
+                  <th style={{ padding: '12px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {futureQueue.length > 0 ? futureQueue.map((v: any) => (
+                  <tr key={v.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px', fontWeight: 'bold', color: '#16698b' }}>
+                      <i className="fa-regular fa-calendar mr-2"></i>
+                      {new Date(v.visitDate).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <div style={{ fontWeight: 'bold' }}>{v.patient.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--primary)' }}>{v.patient.uhid}</div>
+                    </td>
+                    <td style={{ padding: '12px' }}>{`Dr. ${v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}`}</td>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>#{v.tokenNumber}</td>
+                    <td style={{ padding: '12px' }}>
+                      <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#b45309' }}>
+                        Upcoming
+                      </span>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No future bookings found.
                     </td>
                   </tr>
                 )}
