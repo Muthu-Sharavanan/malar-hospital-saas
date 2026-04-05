@@ -461,10 +461,62 @@ p { color: var(--text-muted); }
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 1024px) {
-  .hamburger-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  @media (max-width: 1024px) {
+    .hamburger-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
+
+/* --- Toast Notifications --- */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 9999;
+}
+
+.toast {
+  background: white;
+  border-left: 4px solid var(--secondary);
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  padding: 16px 20px;
+  min-width: 320px;
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.toast.toast-exit {
+  animation: fadeOutRight 0.3s ease-in forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(120%); opacity: 0; }
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--secondary);
+  width: 100%;
+  animation: progress 5s linear forwards;
+}
+
+@keyframes progress {
+  from { width: 100%; }
+  to { width: 0%; }
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
 import LogoutButton from '@/components/LogoutButton';
 
@@ -12,6 +12,10 @@ export default function DoctorDashboard() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [allAppointments, setAllAppointments] = useState<any[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Toast System
+  const [toasts, setToasts] = useState<any[]>([]);
+  const previousQueueIds = useRef<string[]>([]);
 
   // Format doctor name with Dr. prefix
   let drName = userName
@@ -111,11 +115,34 @@ export default function DoctorDashboard() {
     }
   };
 
-  const fetchDoctorQueue = async () => {
+  const fetchDoctorQueue = async (isPolling: boolean = false) => {
     try {
       const res = await fetch(`/api/consultation?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
-      if (data.success) setQueue(data.queue);
+      if (data.success) {
+        setQueue(data.queue);
+        
+        // Toast Notification Logic
+        if (isPolling) {
+          const newVisits = data.queue.filter((v: any) => !previousQueueIds.current.includes(v.id));
+          if (newVisits.length > 0) {
+            const newToasts = newVisits.map((v: any) => ({
+              id: Date.now() + Math.random().toString(),
+              message: `Token #${v.tokenNumber} - ${v.patient.name} has been added to your queue!`
+            }));
+            setToasts(prev => [...prev, ...newToasts]);
+            
+            // Auto remove toasts after 5 seconds
+            newToasts.forEach((t: any) => {
+              setTimeout(() => {
+                setToasts(prev => prev.filter(toast => toast.id !== t.id));
+              }, 5000);
+            });
+          }
+        }
+        // Update Ref
+        previousQueueIds.current = data.queue.map((v: any) => v.id);
+      }
     } catch (err) {
       console.error("Failed to fetch doctor queue", err);
     }
@@ -148,6 +175,13 @@ export default function DoctorDashboard() {
     fetchSession();
     fetchDoctorQueue();
     fetchAllAppointments();
+
+    // Polling every 10 seconds for real-time notifications
+    const intervalId = setInterval(() => {
+      fetchDoctorQueue(true);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleSubmitConsult = async (e: React.FormEvent) => {
@@ -544,6 +578,20 @@ export default function DoctorDashboard() {
           </div>
         )}
       </main>
+
+      {/* Toast Notification Container */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className="toast flex gap-4">
+            <i className="fa-solid fa-bell" style={{ color: 'var(--secondary)', fontSize: '20px', marginTop: '4px' }}></i>
+            <div>
+              <h4 style={{ fontSize: '15px', marginBottom: '2px', color: 'var(--primary)' }}>New Patient Arrived</h4>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t.message}</p>
+            </div>
+            <div className="toast-progress"></div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
