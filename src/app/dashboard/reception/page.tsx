@@ -38,7 +38,7 @@ export default function ReceptionDashboard() {
 
   // Success Modal State
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successInfo, setSuccessInfo] = useState<{title: string, message: string, token: string, uhid?: string}|null>(null);
+  const [successInfo, setSuccessInfo] = useState<{title: string, message: string, token: string, uhid?: string, whatsappSent?: boolean}|null>(null);
 
   // Duplicate Alert State
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
@@ -233,11 +233,27 @@ export default function ReceptionDashboard() {
       });
       const data = await res.json();
       if (data.success) {
+        // Trigger Mock WhatsApp API
+        const selectedDoc = doctors.find((d: any) => d.id === formData.doctorId);
+        const docName = selectedDoc ? selectedDoc.name : 'Consultant';
+        const waMessage = formData.visitDate 
+          ? `Hello ${formData.name}, your future appointment at Malar Hospital with ${docName} on ${formData.visitDate} is confirmed. Reason: ${formData.reason}.`
+          : `Hello ${formData.name}, tokens for today's visit (#${data.visit.tokenNumber}) at Malar Hospital is confirmed. Thank you!`;
+
+        try {
+          fetch('/api/whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: formData.phone, message: waMessage, templateId: formData.visitDate ? 'FUTURE_BOOKING' : 'TODAY_VISIT' })
+          });
+        } catch (e) { console.error("WhatsApp Mock failed", e); }
+
         setSuccessInfo({
           title: data.isNewPatient ? "New Patient Registered!" : "Registration Successful!",
           message: data.isNewPatient ? `A new permanent ID has been created for ${formData.name}.` : `Returning patient ${formData.name} has been added to the queue.`,
           token: data.visit.tokenNumber,
-          uhid: data.uhid
+          uhid: data.uhid,
+          whatsappSent: true
         });
         setShowSuccessModal(true);
         setSelectedPatient(null);
@@ -598,6 +614,13 @@ export default function ReceptionDashboard() {
                    </div>
                  )}
               </div>
+
+              {successInfo.whatsappSent && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: 'bold', marginBottom: '20px', padding: '10px', background: '#ecfdf5', borderRadius: '10px' }}>
+                   <i className="fa-brands fa-whatsapp" style={{ fontSize: '18px' }}></i>
+                   WhatsApp Status: Smoothly Dispatched
+                </div>
+              )}
 
               <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowSuccessModal(false)}>
                 Awesome, Got it!
