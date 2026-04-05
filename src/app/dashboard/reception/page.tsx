@@ -53,7 +53,8 @@ export default function ReceptionDashboard() {
     address: '',
     doctorId: '',
     patientId: '',
-    visitDate: ''
+    visitDate: '',
+    reason: ''
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -184,7 +185,8 @@ export default function ReceptionDashboard() {
       phone: patient.phone || '',
       age: patient.age.toString(),
       gender: patient.gender,
-      address: patient.address || ''
+      address: patient.address || '',
+      reason: ''
     });
     setSearchQuery(patient.phone || patient.name);
     setShowSearchResults(false);
@@ -200,7 +202,8 @@ export default function ReceptionDashboard() {
       gender: 'Male',
       doctorId: '',
       address: '',
-      visitDate: ''
+      visitDate: '',
+      reason: ''
     });
     setSearchQuery('');
   };
@@ -238,7 +241,7 @@ export default function ReceptionDashboard() {
         });
         setShowSuccessModal(true);
         setSelectedPatient(null);
-        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', visitDate: '' });
+        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', visitDate: '', reason: '' });
         setSearchQuery('');
         if (formData.visitDate) {
           setActiveTab('future');
@@ -821,6 +824,22 @@ export default function ReceptionDashboard() {
                 />
                 <span style={{ fontSize: '11px', color: '#94A3B8', marginTop: '4px', display: 'block' }}>Leave empty for Today</span>
               </div>
+
+              {formData.visitDate && formData.visitDate > new Date().toISOString().split('T')[0] && (
+                <div className="form-group animate-fade-in" style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                    REASON FOR FUTURE APPOINTMENT <span style={{ fontWeight: '400', color: '#94A3B8', fontSize: '12px' }}>(Required)</span>
+                  </label>
+                  <textarea 
+                    className="form-input" 
+                    placeholder="Briefly state the reason or symptoms..." 
+                    required
+                    value={formData.reason || ''} 
+                    onChange={e => setFormData({...formData, reason: e.target.value})}
+                    style={{ border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px', resize: 'none', height: '60px' }}
+                  />
+                </div>
+              )}
 
               <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px', paddingTop: '30px', borderTop: '1px solid #F1F5F9' }}>
                 <button 

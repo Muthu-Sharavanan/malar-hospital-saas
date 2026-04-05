@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, phone, age, gender, address, doctorId, patientId, visitDate } = body;
+    const { name, phone, age, gender, address, doctorId, patientId, visitDate, reason } = body;
 
     // 1. Check for EXACT duplicate (Name + Phone) if this is a manual entry (no patientId)
     if (!patientId) {
@@ -85,7 +85,8 @@ export async function POST(req: Request) {
         assignedDoctorName,
         tokenNumber: nextToken,
         visitDate: visitDateObj,
-        status: 'REGISTERED'
+        status: 'REGISTERED',
+        chiefComplaints: reason || null
       },
       include: {
         patient: true,
