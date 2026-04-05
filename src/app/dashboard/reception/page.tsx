@@ -929,6 +929,17 @@ export default function ReceptionDashboard() {
                       >
                         <i className="fa-solid fa-clock-rotate-left mr-1"></i> View History
                       </button>
+                      <button 
+                         className="btn btn-outline" 
+                         style={{ padding: '5px 8px', fontSize: '12px', borderColor: '#25D366', color: '#25D366', marginLeft: '5px' }} 
+                         onClick={() => {
+                           const msg = `Hello ${v.patient.name}, your token #${v.tokenNumber} is active at Malar Hospital. Please be ready for consultation with Dr. ${v.doctor.name.replace(/^(dr\.?\s*)+/i, '')}.`;
+                           window.open(`https://wa.me/91${v.patient.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                         }}
+                         title="Send WhatsApp Reminder"
+                       >
+                        <i className="fa-brands fa-whatsapp"></i>
+                      </button>
                       
                       {/* Hiding Surgery Bill button
                       <button 
@@ -980,6 +991,7 @@ export default function ReceptionDashboard() {
                   <th style={{ padding: '12px' }}>Doctor</th>
                   <th style={{ padding: '12px' }}>Scheduled Token</th>
                   <th style={{ padding: '12px' }}>Status</th>
+                  <th style={{ padding: '12px' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -999,6 +1011,18 @@ export default function ReceptionDashboard() {
                       <span className="badge badge-warning" style={{ background: '#fef3c7', color: '#b45309' }}>
                         Upcoming
                       </span>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                       <button 
+                         className="btn btn-outline" 
+                         style={{ padding: '5px 10px', fontSize: '12px', borderColor: '#25D366', color: '#25D366' }} 
+                         onClick={() => {
+                           const msg = `Hello ${v.patient.name}, this is a reminder for your future appointment at Malar Hospital with Dr. ${v.doctor.name.replace(/^(dr\.?\s*)+/i, '')} on ${new Date(v.visitDate).toLocaleDateString()}. Reason: ${v.chiefComplaints || 'Consultation'}.`;
+                           window.open(`https://wa.me/91${v.patient.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                         }}
+                       >
+                        <i className="fa-brands fa-whatsapp mr-1"></i> Remind
+                       </button>
                     </td>
                   </tr>
                 )) : (
