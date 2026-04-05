@@ -243,7 +243,7 @@ export default function ReceptionDashboard() {
 
         // Instantly trigger the real WhatsApp Web popup
         const waUrl = `https://web.whatsapp.com/send?phone=91${formData.phone}&text=${encodeURIComponent(realWaMessage)}`;
-        window.open(waUrl, '_blank');
+        window.open(waUrl, 'whatsapp_session');
 
         // Trigger Mock WhatsApp API for the dashboard status
         try {
@@ -940,7 +940,7 @@ export default function ReceptionDashboard() {
                          style={{ padding: '5px 8px', fontSize: '12px', borderColor: '#25D366', color: '#25D366', marginLeft: '5px' }} 
                          onClick={() => {
                            const msg = `Hello ${v.patient.name}, your token #${v.tokenNumber} is active at Malar Hospital. Please be ready for consultation with Dr. ${v.doctor.name.replace(/^(dr\.?\s*)+/i, '')}.`;
-                           window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, '_blank');
+                           window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, 'whatsapp_session');
                          }}
                          title="Send WhatsApp Reminder"
                        >
@@ -1024,7 +1024,7 @@ export default function ReceptionDashboard() {
                          style={{ padding: '5px 10px', fontSize: '12px', borderColor: '#25D366', color: '#25D366' }} 
                          onClick={() => {
                            const msg = `Hello ${v.patient.name}, this is a reminder for your future appointment at Malar Hospital with Dr. ${v.doctor.name.replace(/^(dr\.?\s*)+/i, '')} on ${new Date(v.visitDate).toLocaleDateString()}. Reason: ${v.chiefComplaints || 'Consultation'}.`;
-                           window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, '_blank');
+                           window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, 'whatsapp_session');
                          }}
                        >
                         <i className="fa-brands fa-whatsapp mr-1"></i> Remind
