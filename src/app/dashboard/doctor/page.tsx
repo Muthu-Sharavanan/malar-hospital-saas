@@ -242,7 +242,7 @@ export default function DoctorDashboard() {
                    return (
                      <div key={day.toString()} style={{ 
                        minHeight: '100px', 
-                       background: 'white', 
+                       background: isPending ? '#fef2f2' : 'white', 
                        border: `2px solid ${isSameDay(day, new Date()) ? 'var(--primary)' : 'var(--border)'}`, 
                        borderRadius: '8px', 
                        padding: '8px',
