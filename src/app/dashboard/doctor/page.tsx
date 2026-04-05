@@ -196,7 +196,9 @@ export default function DoctorDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Consultation completed successfully!");
+        // Automatically open the Prescription Print view in a clean, reusable tab
+        window.open(`/dashboard/doctor/prescription/${selectedVisit.id}`, 'prescription_print');
+        
         setSelectedVisit(null);
         setConsultation({ chiefComplaints: '', history: '', examination: '', diagnosis: '' });
         fetchDoctorQueue();
