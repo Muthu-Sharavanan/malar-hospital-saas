@@ -250,7 +250,7 @@ export default function ReceptionDashboard() {
           // NEW: If it's a future booking, instantly trigger the real WhatsApp Web popup
           if (formData.visitDate) {
             const realWaMessage = `*MALAR HOSPITAL APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}\n*Reason:* ${formData.reason || 'Consultation'}\n*Token:* #${data.visit.tokenNumber}\n\nPlease reach the hospital 15 mins before your scheduled time. Thank you!`;
-            const waUrl = `https://wa.me/91${formData.phone}?text=${encodeURIComponent(realWaMessage)}`;
+            const waUrl = `https://web.whatsapp.com/send?phone=91${formData.phone}&text=${encodeURIComponent(realWaMessage)}`;
             window.open(waUrl, '_blank');
           }
         } catch (e) { console.error("WhatsApp Mock failed", e); }
@@ -941,7 +941,7 @@ export default function ReceptionDashboard() {
                          style={{ padding: '5px 8px', fontSize: '12px', borderColor: '#25D366', color: '#25D366', marginLeft: '5px' }} 
                          onClick={() => {
                            const msg = `Hello ${v.patient.name}, your token #${v.tokenNumber} is active at Malar Hospital. Please be ready for consultation with Dr. ${v.doctor.name.replace(/^(dr\.?\s*)+/i, '')}.`;
-                           window.open(`https://wa.me/91${v.patient.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                           window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, '_blank');
                          }}
                          title="Send WhatsApp Reminder"
                        >
@@ -1025,7 +1025,7 @@ export default function ReceptionDashboard() {
                          style={{ padding: '5px 10px', fontSize: '12px', borderColor: '#25D366', color: '#25D366' }} 
                          onClick={() => {
                            const msg = `Hello ${v.patient.name}, this is a reminder for your future appointment at Malar Hospital with Dr. ${v.doctor.name.replace(/^(dr\.?\s*)+/i, '')} on ${new Date(v.visitDate).toLocaleDateString()}. Reason: ${v.chiefComplaints || 'Consultation'}.`;
-                           window.open(`https://wa.me/91${v.patient.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                           window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, '_blank');
                          }}
                        >
                         <i className="fa-brands fa-whatsapp mr-1"></i> Remind
