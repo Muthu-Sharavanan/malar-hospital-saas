@@ -246,6 +246,13 @@ export default function ReceptionDashboard() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: formData.phone, message: waMessage, templateId: formData.visitDate ? 'FUTURE_BOOKING' : 'TODAY_VISIT' })
           });
+
+          // NEW: If it's a future booking, instantly trigger the real WhatsApp Web popup
+          if (formData.visitDate) {
+            const realWaMessage = `*MALAR HOSPITAL APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}\n*Reason:* ${formData.reason || 'Consultation'}\n*Token:* #${data.visit.tokenNumber}\n\nPlease reach the hospital 15 mins before your scheduled time. Thank you!`;
+            const waUrl = `https://wa.me/91${formData.phone}?text=${encodeURIComponent(realWaMessage)}`;
+            window.open(waUrl, '_blank');
+          }
         } catch (e) { console.error("WhatsApp Mock failed", e); }
 
         setSuccessInfo({
