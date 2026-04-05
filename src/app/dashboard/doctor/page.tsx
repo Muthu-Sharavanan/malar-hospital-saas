@@ -270,7 +270,6 @@ export default function DoctorDashboard() {
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis'
                               }} title={`${v.patient.name} (${v.patient.age}Y) - ${v.chiefComplaints || v.status}`}>
-                                 {v.status === 'COMPLETED' ? '🟢 ' : '🔴 '}
                                  {v.patient.name} ({v.patient.age}Y) {v.chiefComplaints ? `- ${v.chiefComplaints}` : ''}
                               </div>
                            ))}
