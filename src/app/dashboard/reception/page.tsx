@@ -241,9 +241,11 @@ export default function ReceptionDashboard() {
           ? `*MALAR HOSPITAL APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}\n*Doctor:* Dr. ${docName}\n*Reason:* ${formData.reason || 'Consultation'}\n*Token:* #${data.visit.tokenNumber}\n\nPlease reach the hospital 15 mins before your scheduled time. Thank you!`
           : `*MALAR HOSPITAL VISIT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Doctor:* Dr. ${docName}\n*Token:* #${data.visit.tokenNumber}\n*Status:* Confirmed for Today.\n\nPlease wait in the reception area. Thank you!`;
 
-        // Instantly trigger the real WhatsApp Web popup
-        const waUrl = `https://web.whatsapp.com/send?phone=91${formData.phone}&text=${encodeURIComponent(realWaMessage)}`;
-        window.open(waUrl, 'whatsapp_session');
+        // Instantly trigger the real WhatsApp Web popup ONLY FOR FUTURE BOOKINGS
+        if (formData.visitDate) {
+          const waUrl = `https://web.whatsapp.com/send?phone=91${formData.phone}&text=${encodeURIComponent(realWaMessage)}`;
+          window.open(waUrl, 'whatsapp_session');
+        }
 
         // Trigger Mock WhatsApp API for the dashboard status
         try {
@@ -259,7 +261,7 @@ export default function ReceptionDashboard() {
           message: data.isNewPatient ? `A new permanent ID has been created for ${formData.name}.` : `Returning patient ${formData.name} has been added to the queue.`,
           token: data.visit.tokenNumber,
           uhid: data.uhid,
-          whatsappSent: true
+          whatsappSent: !!formData.visitDate // Only show "Sent" badge for future bookings if tab opened
         });
         setShowSuccessModal(true);
         setSelectedPatient(null);
