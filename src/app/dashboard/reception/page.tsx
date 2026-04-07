@@ -54,6 +54,7 @@ export default function ReceptionDashboard() {
     doctorId: '',
     patientId: '',
     visitDate: '',
+    visitTime: '',
     reason: ''
   });
 
@@ -186,6 +187,8 @@ export default function ReceptionDashboard() {
       age: patient.age.toString(),
       gender: patient.gender,
       address: patient.address || '',
+      visitDate: '',
+      visitTime: '',
       reason: ''
     });
     setSearchQuery(patient.phone || patient.name);
@@ -203,6 +206,7 @@ export default function ReceptionDashboard() {
       doctorId: '',
       address: '',
       visitDate: '',
+      visitTime: '',
       reason: ''
     });
     setSearchQuery('');
@@ -237,8 +241,11 @@ export default function ReceptionDashboard() {
         const selectedDoc = doctors.find((d: any) => d.id === formData.doctorId);
         const docName = selectedDoc ? selectedDoc.name.replace(/^(dr\.?\s*)+/i, '') : 'Consultant';
         
+        const formattedDate = new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        const appointmentTime = formData.visitTime ? ` at ${formData.visitTime}` : '';
+
         const realWaMessage = formData.visitDate 
-          ? `*MALAR HOSPITAL APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}\n*Doctor:* Dr. ${docName}\n*Reason:* ${formData.reason || 'Consultation'}\n*Token:* #${data.visit.tokenNumber}\n\nPlease reach the hospital 15 mins before your scheduled time. Thank you!`
+          ? `*MALAR HOSPITAL APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${formattedDate}${appointmentTime}\n*Doctor:* Dr. ${docName}\n*Reason:* ${formData.reason || 'Consultation'}\n*Token:* #${data.visit.tokenNumber}\n\nPlease reach the hospital 15 mins before your scheduled time. Thank you!`
           : `*MALAR HOSPITAL VISIT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Doctor:* Dr. ${docName}\n*Token:* #${data.visit.tokenNumber}\n*Status:* Confirmed for Today.\n\nPlease wait in the reception area. Thank you!`;
 
         // Instantly trigger the real WhatsApp Web popup ONLY FOR FUTURE BOOKINGS
@@ -265,7 +272,7 @@ export default function ReceptionDashboard() {
         });
         setShowSuccessModal(true);
         setSelectedPatient(null);
-        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', visitDate: '', reason: '' });
+        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', visitDate: '', visitTime: '', reason: '' });
         setSearchQuery('');
         if (formData.visitDate) {
           setActiveTab('future');
@@ -856,20 +863,35 @@ export default function ReceptionDashboard() {
                 <span style={{ fontSize: '11px', color: '#94A3B8', marginTop: '4px', display: 'block' }}>Leave empty for Today</span>
               </div>
 
-              {formData.visitDate && formData.visitDate > new Date().toISOString().split('T')[0] && (
-                <div className="form-group animate-fade-in" style={{ gridColumn: 'span 2' }}>
-                  <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
-                    REASON FOR FUTURE APPOINTMENT <span style={{ fontWeight: '400', color: '#94A3B8', fontSize: '12px' }}>(Required)</span>
-                  </label>
-                  <textarea 
-                    className="form-input" 
-                    placeholder="Briefly state the reason or symptoms..." 
-                    required
-                    value={formData.reason || ''} 
-                    onChange={e => setFormData({...formData, reason: e.target.value})}
-                    style={{ border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px', resize: 'none', height: '60px' }}
-                  />
-                </div>
+              {formData.visitDate && formData.visitDate >= new Date().toISOString().split('T')[0] && (
+                <>
+                  <div className="form-group animate-fade-in">
+                    <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                      <i className="fa-regular fa-clock" style={{ marginRight: '6px' }}></i> APPOINTMENT TIME
+                    </label>
+                    <input 
+                      type="time" 
+                      className="form-input" 
+                      value={formData.visitTime || ''} 
+                      onChange={e => setFormData({...formData, visitTime: e.target.value})}
+                      style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  <div className="form-group animate-fade-in" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                      REASON FOR FUTURE APPOINTMENT <span style={{ fontWeight: '400', color: '#94A3B8', fontSize: '12px' }}>(Required)</span>
+                    </label>
+                    <textarea 
+                      className="form-input" 
+                      placeholder="Briefly state the reason or symptoms..." 
+                      required
+                      value={formData.reason || ''} 
+                      onChange={e => setFormData({...formData, reason: e.target.value})}
+                      style={{ border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px', resize: 'none', height: '60px' }}
+                    />
+                  </div>
+                </>
               )}
 
               <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px', paddingTop: '30px', borderTop: '1px solid #F1F5F9' }}>
