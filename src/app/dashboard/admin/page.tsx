@@ -321,7 +321,7 @@ export default function AdminDashboard() {
         {activeView === 'performance' ? (
           <>
             {/* KPI Cards Row */}
-            <div className="responsive-grid responsive-grid-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 items-stretch">
               <StatCard 
                   label="New Registrations (Today)" 
                   value={stats?.totalPatients || 0} 
@@ -348,15 +348,15 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-              <div className="lg:col-span-2 glass-card overflow-hidden !p-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10 items-stretch">
+              <div className="lg:col-span-2 glass-card overflow-hidden !p-0 flex flex-col">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                   <div>
                     <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">7-Day Patient Traffic</h4>
                     <p className="text-xs text-slate-400 mt-1">Daily registration volume vs previous period</p>
                   </div>
                 </div>
-                <div className="h-[300px] w-full p-4">
+                <div className="flex-1 h-[300px] w-full p-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={stats?.sevenDayTrend || []}>
                       <defs>
@@ -377,9 +377,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="glass-card flex flex-col">
+              <div className="glass-card flex flex-col h-full">
                 <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Visit Distribution</h4>
-                <div className="h-[250px] w-full">
+                <div className="flex-1 h-[250px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -411,24 +411,39 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Hiding Transaction Stream
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
               <div className="lg:col-span-2 glass-card">
-                  <div className="flex ...">
-                    ...
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Recent Clinical Activity</h4>
+                      <p className="text-xs text-slate-400 mt-1">Live patient flow and status updates</p>
+                    </div>
+                    <button className="text-xs font-bold text-primary hover:underline">View All</button>
                   </div>
                   <div className="overflow-x-auto">
-                    ...
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                          <th className="pb-3">Patient</th>
+                          <th className="pb-3">UHID</th>
+                          <th className="pb-3 text-right">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs">
+                        {patientList.slice(0, 5).map((p: any) => (
+                          <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                            <td className="py-3 font-bold text-slate-700">{p.name}</td>
+                            <td className="py-3 text-slate-500">{p.uhid}</td>
+                            <td className="py-3 text-right text-slate-400">{new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
               </div>
-              */}
 
-              {/* Quick Actions / Summary */}
               <div className="flex flex-col gap-6">
-                  {/* Weekly Goal Revenue Card hidden per client request */}
-
-
-                  <div className="glass-card flex flex-col gap-4">
+                  <div className="glass-card flex flex-col gap-4 flex-1 justify-center">
                     <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Efficiency Metrics</h4>
                     <MetricRow label="Consultation Rate" value="92%" isUp={true} />
                     <MetricRow label="Lab Conversion" value="65%" isUp={false} />
