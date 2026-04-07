@@ -3,13 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import LogoutButton from '@/components/LogoutButton';
 import { 
   Users, 
-  IndianRupee, 
-  TrendingUp, 
   Activity, 
   Calendar, 
-  ArrowUpRight, 
-  ArrowDownRight,
-  TrendingDown,
   LayoutDashboard,
   FileText,
   Settings,
@@ -21,7 +16,12 @@ import {
   X,
   Clock,
   Stethoscope,
-  Trash2
+  Trash2,
+  CheckCircle,
+  FlaskConical,
+  ArrowUpRight,
+  ArrowDownRight,
+  TrendingDown
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -322,46 +322,94 @@ export default function AdminDashboard() {
           <>
             {/* KPI Cards Row */}
             <div className="responsive-grid responsive-grid-2 lg:grid-cols-4 gap-6 mb-10">
-              {/* Hiding Revenue Card
               <StatCard 
-                  label="Today's Revenue" 
-                  value={`₹${stats?.totalCollection?.toLocaleString() || 0}`} 
-                  icon={<IndianRupee className="text-primary" />} 
-                  trend={revenueGrowth} 
-                  isPositive={parseFloat(revenueGrowth as string) >= 0}
-              />
-              */}
-              <StatCard 
-                  label="Patient Registrations" 
+                  label="New Registrations (Today)" 
                   value={stats?.totalPatients || 0} 
-                  icon={<Users className="text-secondary" />} 
+                  icon={<Users className="text-primary" />} 
                   trend={stats?.totalPatientsMonth || 0}
                   trendLabel="this month"
               />
-              {/* Hiding financial collection cards
               <StatCard 
-                  label="Monthly Collection" 
-                  value={`₹${stats?.monthlyCollection?.toLocaleString() || 0}`} 
-                  icon={<TrendingUp className="text-success" />} 
+                  label="Active Today" 
+                  value={stats?.activeToday || 0} 
+                  icon={<Activity className="text-secondary" />} 
+                  trend="+12%"
+                  isPositive={true}
               />
               <StatCard 
-                  label="Avg. Bill Value" 
-                  value={`₹${stats?.totalPatients > 0 ? (stats.totalCollection / stats.totalPatients).toFixed(0) : 0}`} 
-                  icon={<Activity className="text-accent" />} 
+                  label="Completed Consultations" 
+                  value={stats?.completedCount || 0} 
+                  icon={<CheckCircle className="text-success" />} 
               />
-              */}
+              <StatCard 
+                  label="Pending Lab Reports" 
+                  value={stats?.pendingLabs || 0} 
+                  icon={<FlaskConical className="text-accent" />} 
+              />
             </div>
 
-            {/* Hiding Financial Charts Row
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
               <div className="lg:col-span-2 glass-card overflow-hidden !p-0">
-                ... 
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">7-Day Patient Traffic</h4>
+                    <p className="text-xs text-slate-400 mt-1">Daily registration volume vs previous period</p>
+                  </div>
+                </div>
+                <div className="h-[300px] w-full p-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={stats?.sevenDayTrend || []}>
+                      <defs>
+                        <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+                      <Tooltip 
+                        contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px'}}
+                      />
+                      <Area type="monotone" dataKey="count" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="glass-card flex ...">
-                ...
+              
+              <div className="glass-card flex flex-col">
+                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Visit Distribution</h4>
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={Object.entries(stats?.visitBreakdown || {}).map(([name, value]) => ({ name, value }))}
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {Object.entries(stats?.visitBreakdown || {}).map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={['#0A4D68', '#14B8A6', '#0891B2', '#1E293B'][index % 4]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-4 space-y-2">
+                   {Object.entries(stats?.visitBreakdown || {}).map(([name, value]: [string, any], idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs">
+                         <span className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full" style={{ background: ['#0A4D68', '#14B8A6', '#0891B2', '#1E293B'][idx % 4] }}></span>
+                            <span className="text-slate-500 font-medium">{name}</span>
+                         </span>
+                         <span className="font-bold text-slate-700">{value} visits</span>
+                      </div>
+                   ))}
+                </div>
               </div>
             </div>
-            */}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Hiding Transaction Stream
