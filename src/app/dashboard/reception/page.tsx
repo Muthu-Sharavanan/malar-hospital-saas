@@ -229,6 +229,12 @@ export default function ReceptionDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    if (formData.phone.length !== 10) {
+      alert("❌ Please enter a valid 10-digit mobile number.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
@@ -775,12 +781,19 @@ export default function ReceptionDashboard() {
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>PHONE NUMBER</label>
+               <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                   PHONE NUMBER <span style={{ color: formData.phone.length === 10 ? '#14B8A6' : '#EF4444', fontSize: '11px', marginLeft: '10px' }}>({formData.phone.length}/10 digits)</span>
+                </label>
                 <input 
-                  type="tel" className="form-input" placeholder="+91" required
-                  value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
-                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                  type="tel" className="form-input" placeholder="e.g. 9876543210" required
+                  maxLength={10}
+                  pattern="\d{10}"
+                  value={formData.phone} onChange={e => {
+                    const val = e.target.value.replace(/\D/g, ''); // Numeric only
+                    setFormData({...formData, phone: val});
+                  }}
+                  style={{ height: '50px', border: `1px solid ${formData.phone.length === 10 ? '#E2E8F0' : '#FECACA'}`, borderRadius: '8px' }}
                 />
               </div>
 
@@ -868,10 +881,12 @@ export default function ReceptionDashboard() {
                   <div className="form-group animate-fade-in">
                     <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
                       <i className="fa-regular fa-clock" style={{ marginRight: '6px' }}></i> APPOINTMENT TIME
+                      <span style={{ fontSize: '11px', color: '#94A3B8', marginLeft: '10px' }}> (AM/PM Standard)</span>
                     </label>
                     <input 
                       type="time" 
                       className="form-input" 
+                      required={!!formData.visitDate}
                       value={formData.visitTime || ''} 
                       onChange={e => setFormData({...formData, visitTime: e.target.value})}
                       style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
