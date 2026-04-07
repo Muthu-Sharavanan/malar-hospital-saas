@@ -321,48 +321,48 @@ export default function AdminDashboard() {
         {activeView === 'performance' ? (
           <>
             {/* KPI Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 items-stretch">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '40px' }}>
               <StatCard 
                   label="New Registrations (Today)" 
                   value={stats?.totalPatients || 0} 
-                  icon={<Users className="text-primary" />} 
+                  icon={<Users className="text-secondary" style={{ color: '#0A4D68' }} />} 
                   trend={stats?.totalPatientsMonth || 0}
                   trendLabel="this month"
               />
               <StatCard 
                   label="Active Today" 
                   value={stats?.activeToday || 0} 
-                  icon={<Activity className="text-secondary" />} 
+                  icon={<Activity style={{ color: '#14B8A6' }} />} 
                   trend="+12%"
                   isPositive={true}
               />
               <StatCard 
                   label="Completed Consultations" 
                   value={stats?.completedCount || 0} 
-                  icon={<CheckCircle className="text-success" />} 
+                  icon={<CheckCircle style={{ color: '#059669' }} />} 
               />
               <StatCard 
                   label="Pending Lab Reports" 
                   value={stats?.pendingLabs || 0} 
-                  icon={<FlaskConical className="text-accent" />} 
+                  icon={<FlaskConical style={{ color: '#D97706' }} />} 
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10 items-stretch">
-              <div className="lg:col-span-2 glass-card overflow-hidden !p-0 flex flex-col">
-                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', marginBottom: '40px', alignItems: 'stretch' }}>
+              <div className="glass-card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(248, 250, 252, 0.5)' }}>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">7-Day Patient Traffic</h4>
-                    <p className="text-xs text-slate-400 mt-1">Daily registration volume vs previous period</p>
+                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>7-Day Patient Traffic</h4>
+                    <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>Daily registration volume vs previous period</p>
                   </div>
                 </div>
-                <div className="flex-1 h-[300px] w-full p-4">
+                <div style={{ flex: '1', height: '300px', width: '100%', padding: '16px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={stats?.sevenDayTrend || []}>
                       <defs>
                         <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -371,15 +371,15 @@ export default function AdminDashboard() {
                       <Tooltip 
                         contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px'}}
                       />
-                      <Area type="monotone" dataKey="count" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
+                      <Area type="monotone" dataKey="count" stroke="#14B8A6" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
               
-              <div className="glass-card flex flex-col h-full">
-                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6">Visit Distribution</h4>
-                <div className="flex-1 h-[250px] w-full">
+              <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>Visit Distribution</h4>
+                <div style={{ flex: '1', height: '250px', width: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -397,44 +397,44 @@ export default function AdminDashboard() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 space-y-2">
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                    {Object.entries(stats?.visitBreakdown || {}).map(([name, value]: [string, any], idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs">
-                         <span className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full" style={{ background: ['#0A4D68', '#14B8A6', '#0891B2', '#1E293B'][idx % 4] }}></span>
-                            <span className="text-slate-500 font-medium">{name}</span>
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: ['#0A4D68', '#14B8A6', '#0891B2', '#1E293B'][idx % 4] }}></span>
+                            <span style={{ color: '#64748B', fontWeight: '500' }}>{name}</span>
                          </span>
-                         <span className="font-bold text-slate-700">{value} visits</span>
+                         <span style={{ fontWeight: 'bold', color: '#334155' }}>{value} visits</span>
                       </div>
                    ))}
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-              <div className="lg:col-span-2 glass-card">
-                  <div className="flex justify-between items-center mb-6">
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', alignItems: 'stretch' }}>
+              <div className="glass-card" style={{ flex: '1' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Recent Clinical Activity</h4>
-                      <p className="text-xs text-slate-400 mt-1">Live patient flow and status updates</p>
+                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Clinical Activity</h4>
+                      <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>Live patient flow and status updates</p>
                     </div>
-                    <button className="text-xs font-bold text-primary hover:underline">View All</button>
+                    <button style={{ fontSize: '12px', fontWeight: 'bold', color: '#14B8A6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
-                        <tr className="text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50">
-                          <th className="pb-3">Patient</th>
-                          <th className="pb-3">UHID</th>
-                          <th className="pb-3 text-right">Time</th>
+                        <tr style={{ textAlign: 'left', fontSize: '10px', fontWeight: 'bold', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #F1F5F9' }}>
+                          <th style={{ paddingBottom: '12px' }}>Patient</th>
+                          <th style={{ paddingBottom: '12px' }}>UHID</th>
+                          <th style={{ paddingBottom: '12px', textAlign: 'right' }}>Time</th>
                         </tr>
                       </thead>
-                      <tbody className="text-xs">
+                      <tbody style={{ fontSize: '12px' }}>
                         {patientList.slice(0, 5).map((p: any) => (
-                          <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
-                            <td className="py-3 font-bold text-slate-700">{p.name}</td>
-                            <td className="py-3 text-slate-500">{p.uhid}</td>
-                            <td className="py-3 text-right text-slate-400">{new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                          <tr key={p.id} style={{ borderBottom: '1px solid #F8FAFC' }}>
+                            <td style={{ padding: '12px 0', fontWeight: 'bold', color: '#334155' }}>{p.name}</td>
+                            <td style={{ padding: '12px 0', color: '#64748B' }}>{p.uhid}</td>
+                            <td style={{ padding: '12px 0', textAlign: 'right', color: '#94A3B8' }}>{new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -442,9 +442,9 @@ export default function AdminDashboard() {
                   </div>
               </div>
 
-              <div className="flex flex-col gap-6">
-                  <div className="glass-card flex flex-col gap-4 flex-1 justify-center">
-                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Efficiency Metrics</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div className="glass-card" style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Efficiency Metrics</h4>
                     <MetricRow label="Consultation Rate" value="92%" isUp={true} />
                     <MetricRow label="Lab Conversion" value="65%" isUp={false} />
                     <MetricRow label="Wait Time avg." value="14m" isUp={true} />
