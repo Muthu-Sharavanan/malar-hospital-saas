@@ -220,13 +220,7 @@ export default function AdminDashboard() {
 
   const COLORS = ['#0A4D68', '#088395', '#16698b', '#05bfdb'];
 
-  // Calculate Growth Percentage
-  const calculateGrowth = (current: number, previous: number) => {
-    if (previous === 0) return 0;
-    return (((current - previous) / previous) * 100).toFixed(1);
-  };
-
-  const revenueGrowth = calculateGrowth(stats?.totalCollection || 0, stats?.yesterdayCollection || 0);
+  // --- CLINICAL PERFORMANCE ANALYTICS ---
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F2F5' }}>
