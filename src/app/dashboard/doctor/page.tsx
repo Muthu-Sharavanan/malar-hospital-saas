@@ -775,16 +775,18 @@ export default function DoctorDashboard() {
 
       {/* Calendar Visit Detail Modal */}
       {calendarVisitDetail && (
-        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" onClick={() => setCalendarVisitDetail(null)}>
-           <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-start">
-                 <div>
-                    <h3 className="text-xl font-bold text-[#0A4D68]">{calendarVisitDetail.patient.name}</h3>
-                    <div className="text-xs font-bold text-slate-500 mt-1">
-                      {calendarVisitDetail.patient.gender} • {calendarVisitDetail.patient.age} Y/O • {calendarVisitDetail.patient.phone || 'No Phone'}
+        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" style={{ padding: '20px' }} onClick={() => setCalendarVisitDetail(null)}>
+           <div className="bg-white rounded-2xl overflow-hidden shadow-2xl" style={{ maxWidth: '450px', width: '100%' }} onClick={e => e.stopPropagation()}>
+              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-start gap-4">
+                 <div style={{ flex: 1 }}>
+                    <h3 className="text-xl font-bold text-[#0A4D68] m-0 mb-2">{calendarVisitDetail.patient.name}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="bg-white px-2 py-1 rounded-md text-[10px] font-bold text-slate-600 shadow-sm border border-blue-50">{calendarVisitDetail.patient.gender}</span>
+                      <span className="bg-white px-2 py-1 rounded-md text-[10px] font-bold text-slate-600 shadow-sm border border-blue-50">{calendarVisitDetail.patient.age} Y/O</span>
+                      <span className="bg-white px-2 py-1 rounded-md text-[10px] font-bold text-slate-600 shadow-sm border border-blue-50">{calendarVisitDetail.patient.phone || 'No Phone'}</span>
                     </div>
                  </div>
-                 <button onClick={() => setCalendarVisitDetail(null)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg">
+                 <button onClick={() => setCalendarVisitDetail(null)} className="flex items-center justify-center bg-white border border-blue-100 rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg hover:bg-rose-50 transition-colors flex-shrink-0" style={{ width: '36px', height: '36px' }}>
                     &times;
                  </button>
               </div>
@@ -836,11 +838,14 @@ export default function DoctorDashboard() {
 
       {/* KPI Details Modal */}
       {statModalState && (
-        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" onClick={() => setStatModalState(null)}>
-           <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-center">
-                 <h3 className="text-xl font-bold text-[#0A4D68]">{statModalState.title} ({statModalState.list.length})</h3>
-                 <button onClick={() => setStatModalState(null)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg">
+        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" style={{ padding: '20px' }} onClick={() => setStatModalState(null)}>
+           <div className="bg-white rounded-2xl flex flex-col overflow-hidden shadow-2xl" style={{ maxWidth: '600px', width: '100%', maxHeight: '85vh' }} onClick={e => e.stopPropagation()}>
+              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-center gap-4 flex-shrink-0">
+                 <h3 className="text-xl font-bold text-[#0A4D68] m-0 flex items-center gap-2">
+                   {statModalState.title} 
+                   <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full shadow-sm">{statModalState.list.length}</span>
+                 </h3>
+                 <button onClick={() => setStatModalState(null)} className="flex items-center justify-center bg-white border border-blue-100 rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg hover:bg-rose-50 transition-colors flex-shrink-0" style={{ width: '36px', height: '36px' }}>
                     &times;
                  </button>
               </div>
