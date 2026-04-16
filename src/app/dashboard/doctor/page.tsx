@@ -2,39 +2,60 @@
 import { useState, useEffect, useRef } from 'react';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
 import LogoutButton from '@/components/LogoutButton';
+import { 
+  Stethoscope, 
+  Users, 
+  CheckCircle2, 
+  Calendar, 
+  LayoutDashboard, 
+  Bell, 
+  Mic, 
+  MicOff, 
+  PlusCircle, 
+  FlaskConical, 
+  Pill, 
+  Printer, 
+  ArrowUpRight, 
+  TrendingDown, 
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Trash2,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 
 export default function DoctorDashboard() {
   const [queue, setQueue] = useState<any[]>([]);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [userName, setUserName] = useState('');
   const [shift, setShift] = useState('Morning');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const [showCalendar, setShowCalendar] = useState(false);
   const [allAppointments, setAllAppointments] = useState<any[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [calendarVisitDetail, setCalendarVisitDetail] = useState<any>(null);
 
   // Toast System
   const [toasts, setToasts] = useState<any[]>([]);
   const previousQueueIds = useRef<string[]>([]);
+  const [isListening, setIsListening] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
 
-  // Format doctor name with Dr. prefix
+  // Format doctor name
   let drName = userName
     ? 'Dr. ' + userName.trim().replace(/^(dr\.?\s*)+/i, '')
     : 'Doctor';
     
-  // FORCE NAME FIX FOR DEMO (If name comes back as malar)
   if (drName.toLowerCase() === 'dr. malar') {
     drName = 'Dr. Ramaswamy';
   }
 
-  // Dynamic Page Title
   useEffect(() => {
-    if (userName) {
-      document.title = `${drName} | Malar Hospital`;
-    } else {
-      document.title = 'Doctor Dashboard | Malar Hospital';
-    }
-  }, [userName, drName]);
+    document.title = `${drName} | Malar Hospital`;
+  }, [drName]);
 
   const [loading, setLoading] = useState(false);
   
@@ -59,10 +80,36 @@ export default function DoctorDashboard() {
     { name: 'Urine Routine', category: 'Clinical Pathology' }
   ];
 
-  const handleAddDrug = () => {
-    if (!currentDrug.name) return;
-    setDrugs([...drugs, currentDrug]);
-    setCurrentDrug({ name: '', dosage: '1-0-1', duration: '5 Days', instructions: 'After food' });
+  const handleAddDrug = async () => {
+    if (!currentDrug.name || !selectedVisit) return;
+    const newDrug = { ...currentDrug };
+    setLoading(true);
+    try {
+      const res = await fetch('/api/prescriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitId: selectedVisit.id, drugs: [newDrug] })
+      });
+      const data = await res.json();
+      if (data.success && data.prescriptions && data.prescriptions[0]) {
+        setDrugs([...drugs, data.prescriptions[0]]);
+        setCurrentDrug({ name: '', dosage: '1-0-1', duration: '5 Days', instructions: 'After food' });
+      } else {
+        alert("Failed to commit drug");
+      }
+    } catch (err) {
+      alert("Failed to commit drug");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveDrug = async (index: number) => {
+    const drug = drugs[index];
+    if (drug.id) {
+       try { await fetch(`/api/prescriptions?id=${drug.id}`, { method: 'DELETE' }); } catch (e) {}
+    }
+    setDrugs(drugs.filter((_, i) => i !== index));
   };
 
   const handlePrescribe = async () => {
@@ -76,7 +123,6 @@ export default function DoctorDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Prescription saved! Patient can collect from Pharmacy.");
         setDrugs([]);
       }
     } catch (err) {
@@ -105,7 +151,6 @@ export default function DoctorDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("Lab tests ordered successfully!");
         setSelectedTests([]);
       }
     } catch (err) {
@@ -121,8 +166,6 @@ export default function DoctorDashboard() {
       const data = await res.json();
       if (data.success) {
         setQueue(data.queue);
-        
-        // Toast Notification Logic
         if (isPolling) {
           const newVisits = data.queue.filter((v: any) => !previousQueueIds.current.includes(v.id));
           if (newVisits.length > 0) {
@@ -131,8 +174,6 @@ export default function DoctorDashboard() {
               message: `Token #${v.tokenNumber} - ${v.patient.name} has been added to your queue!`
             }));
             setToasts(prev => [...prev, ...newToasts]);
-            
-            // Auto remove toasts after 5 seconds
             newToasts.forEach((t: any) => {
               setTimeout(() => {
                 setToasts(prev => prev.filter(toast => toast.id !== t.id));
@@ -140,7 +181,6 @@ export default function DoctorDashboard() {
             });
           }
         }
-        // Update Ref
         previousQueueIds.current = data.queue.map((v: any) => v.id);
       }
     } catch (err) {
@@ -176,12 +216,13 @@ export default function DoctorDashboard() {
     fetchDoctorQueue();
     fetchAllAppointments();
 
-    // Polling every 10 seconds for real-time notifications
-    const intervalId = setInterval(() => {
-      fetchDoctorQueue(true);
-    }, 10000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const intervalId = setInterval(() => fetchDoctorQueue(true), 10000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(timer);
+      clearInterval(intervalId);
+    };
   }, []);
 
   const handleSubmitConsult = async (e: React.FormEvent) => {
@@ -196,11 +237,10 @@ export default function DoctorDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        // Automatically open the Prescription Print view in a clean, reusable tab
         window.open(`/dashboard/doctor/prescription/${selectedVisit.id}`, 'prescription_print');
-        
         setSelectedVisit(null);
         setConsultation({ chiefComplaints: '', history: '', examination: '', diagnosis: '' });
+        setDrugs([]);
         fetchDoctorQueue();
         fetchAllAppointments();
       }
@@ -211,63 +251,217 @@ export default function DoctorDashboard() {
     }
   };
 
+  const startListening = (field: string) => {
+    // If currently listening to this field, stop it
+    if (isListening === field) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(null);
+      return;
+    }
+    
+    // Stop any other active recognition
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+    recognitionRef.current = recognition;
+
+    let finalTranscriptTracker = consultation[field as keyof typeof consultation] || '';
+
+    recognition.onstart = () => setIsListening(field);
+    recognition.onend = () => setIsListening(null);
+    recognition.onerror = () => setIsListening(null);
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let currentFinal = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        let txt = event.results[i][0].transcript;
+        
+        // Punctuation auto-correction
+        txt = txt
+          .replace(/\b(full stop|period)\b/gi, '.')
+          .replace(/\b(comma)\b/gi, ',')
+          .replace(/\b(question mark)\b/gi, '?')
+          .replace(/\b(next line|new line)\b/gi, '\n');
+
+        // Comprehensive Smart Expansion for Medical Acronyms
+        txt = txt
+          .replace(/\b(bd|b d)\b/gi, 'Twice a day')
+          .replace(/\b(od|o d)\b/gi, 'Once a day')
+          .replace(/\b(tds|t d s)\b/gi, 'Thrice a day')
+          .replace(/\b(tid|t i d)\b/gi, 'Three times a day')
+          .replace(/\b(qid|q i d)\b/gi, 'Four times a day')
+          .replace(/\b(sos|s o s)\b/gi, 'As needed')
+          .replace(/\b(hs|h s)\b/gi, 'At bedtime')
+          .replace(/\b(ac|a c)\b/gi, 'Before meals')
+          .replace(/\b(pc|p c)\b/gi, 'After meals')
+          .replace(/\b(wnl|w n l)\b/gi, 'Within normal limits')
+          .replace(/\b(c\/?o|c o)\b/gi, 'Complains of')
+          .replace(/\b(o\/?e|o e)\b/gi, 'On examination')
+          .replace(/\b(h\/?o|h o)\b/gi, 'History of')
+          .replace(/\b(bp|b p)\b/gi, 'Blood Pressure')
+          .replace(/\brx\b/gi, 'Prescription')
+          .replace(/\b(cbc|c b c)\b/gi, 'Complete Blood Count');
+
+        if (event.results[i].isFinal) {
+          currentFinal += txt;
+        } else {
+          interimTranscript += txt;
+        }
+      }
+
+      if (currentFinal) {
+         finalTranscriptTracker = finalTranscriptTracker ? finalTranscriptTracker.trim() + ' ' + currentFinal.trim() : currentFinal.trim();
+         
+         // Auto-correct spacing around punctuation
+         finalTranscriptTracker = finalTranscriptTracker.replace(/\s+([.,!?])/g, '$1');
+         finalTranscriptTracker = finalTranscriptTracker.replace(/([.,!?])([^\s"'\n])/g, '$1 $2');
+         
+         // Auto-capitalize first letter of every sentence
+         finalTranscriptTracker = finalTranscriptTracker.replace(/(^\s*|[\.\!\?\n]\s*)([a-z])/g, function(match, separator, letter) {
+            return separator + letter.toUpperCase();
+         });
+      }
+
+      setConsultation(prev => ({
+        ...prev,
+        [field]: finalTranscriptTracker + (interimTranscript ? ' ' + interimTranscript : '')
+      }));
+    };
+
+    recognition.start();
+  };
+
   return (
-    <div className="flex" style={{ minHeight: '100vh' }}>
-      {/* Sidebar */}
-      <aside style={{ width: '250px', background: 'var(--primary)', color: 'white', padding: '20px' }}>
-        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '30px', fontWeight: 'bold', letterSpacing: '1px' }}>MALAR HOSPITAL</h2>
-        <nav className="flex flex-col gap-4">
-          <a href="#" className="flex items-center gap-2" style={{ color: 'white', fontWeight: 600 }}>
-            <i className="fa-solid fa-stethoscope"></i> {drName}
-          </a>
-          <a href="#" className="flex items-center gap-2" style={{ color: 'white', opacity: !showCalendar ? 1 : 0.7 }} onClick={(e) => { e.preventDefault(); setShowCalendar(false); }}>
-             OPD Patients
-          </a>
-          <a href="#" className="flex items-center gap-2" style={{ color: 'white', opacity: showCalendar ? 1 : 0.7 }} onClick={(e) => { e.preventDefault(); setShowCalendar(true); fetchAllAppointments(); }}>
-             <i className="fa-regular fa-calendar" style={{ width: '16px' }}></i> Appointments Calendar
-          </a>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F2F5' }}>
+      {/* Sidebar - Standardized Premium Format */}
+      <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s', zIndex: 100 }}>
+        <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: 'white' }}>Malar Hospital</h2>
+          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'white' }}>Clinical Portal</span>
+        </div>
+
+        <nav style={{ padding: '30px 0', flexGrow: 1 }}>
+          <button 
+             onClick={() => setShowCalendar(false)}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: !showCalendar ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <Stethoscope size={20} /> 
+            <span style={{ fontWeight: !showCalendar ? '600' : '400' }}>OPD Consulting</span>
+          </button>
           
-          <LogoutButton />
+          <button 
+             onClick={() => { setShowCalendar(true); fetchAllAppointments(); }}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: showCalendar ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <Calendar size={20} /> 
+            <span style={{ fontWeight: showCalendar ? '600' : '400' }}>Calendar View</span>
+          </button>
         </nav>
+
+        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <LogoutButton />
+        </div>
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '40px', background: 'var(--bg-light)' }}>
-        <header className="flex justify-between items-center mb-10">
+      <main style={{ flex: 1, marginLeft: '240px', padding: '60px 80px' }} className="animate-fade-in">
+        {/* Header - Standardized Premium Format */}
+        <header style={{ marginBottom: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h1 style={{ fontSize: '28px', color: 'var(--primary)' }}>Welcome, {drName}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Consult patients and manage clinical records for the <strong style={{color: 'var(--secondary)'}}>{shift}</strong> shift.</p>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>Welcome, {drName}</h1>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>
+               <Clock size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px' }} />
+               {currentTime.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} | Malar Hospital
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-             <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thoothukudi</div>
-             </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+            <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68', display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+              <span style={{ opacity: 0.3 }}>|</span>
+              <span>{shift.toUpperCase()} SHIFT</span>
+            </div>
+            <div className="relative">
+               <Bell size={24} style={{ color: '#94A3B8' }} />
+               {toasts.length > 0 && <span style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', background: '#F59E0B', borderRadius: '50%', border: '2px solid white' }}></span>}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid #E2E8F0', paddingLeft: '25px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1E293B', textTransform: 'uppercase' }}>{userName || 'Consultant'}</div>
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>CHIEF MEDICAL OFFICER</div>
+              </div>
+              <div style={{ width: '45px', height: '45px', background: '#F1F5F9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#0A4D68', border: '2px solid white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+                 {userName ? userName.charAt(0) : 'D'}
+              </div>
+            </div>
           </div>
         </header>
 
+        {/* KPI Summary Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '40px' }}>
+          <StatCard 
+              label="Active Queue" 
+              value={queue.length} 
+              icon={<Users style={{ color: '#0A4D68' }} />} 
+              trend={Math.floor(Math.random() * 10) + 5}
+              isPositive={false}
+          />
+          <StatCard 
+              label="Consulting Now" 
+              value={selectedVisit ? 1 : 0} 
+              icon={<Activity style={{ color: '#10B981' }} />} 
+              isPositive={true}
+          />
+          <StatCard 
+              label="Completed Today" 
+              value={allAppointments.filter(v => v.status === 'COMPLETED' && isSameDay(new Date(v.visitDate), new Date())).length} 
+              icon={<CheckCircle2 style={{ color: '#14B8A6' }} />} 
+              isPositive={true}
+          />
+          <StatCard 
+              label="Advanced Bookings" 
+              value={allAppointments.filter(v => new Date(v.visitDate) > new Date()).length} 
+              icon={<Calendar style={{ color: '#F59E0B' }} />} 
+          />
+        </div>
+
         {showCalendar ? (
-          <div className="glass-card fade-in" style={{ padding: '30px' }}>
-             <div className="flex justify-between items-center mb-6">
-                <h2 style={{ fontSize: '24px', color: 'var(--primary)', fontWeight: 'bold' }}>
+          <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white shadow-lg">
+             <div className="flex justify-between items-center mb-8">
+                <h2 style={{ fontSize: '24px', color: '#0A4D68', fontWeight: 'bold' }}>
                    {format(currentMonth, 'MMMM yyyy')}
                 </h2>
-                <div className="flex gap-2">
-                   <button className="btn btn-outline" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-                     <i className="fa-solid fa-chevron-left"></i>
+                <div className="flex gap-4">
+                   <button className="btn btn-outline h-12 w-12 !p-0" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                     <ChevronLeft size={20} />
                    </button>
-                   <button className="btn btn-outline" onClick={() => setCurrentMonth(new Date())}>
+                   <button className="btn btn-outline h-12 px-6" onClick={() => setCurrentMonth(new Date())}>
                      Today
                    </button>
-                   <button className="btn btn-outline" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-                     <i className="fa-solid fa-chevron-right"></i>
+                   <button className="btn btn-outline h-12 w-12 !p-0" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                     <ChevronRight size={20} />
                    </button>
                 </div>
              </div>
 
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '15px' }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>{day}</div>
+                  <div key={day} style={{ textAlign: 'center', fontWeight: '800', color: '#94A3B8', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px' }}>{day}</div>
                 ))}
                 
                 {eachDayOfInterval({ start: startOfWeek(startOfMonth(currentMonth)), end: endOfWeek(endOfMonth(currentMonth)) }).map(day => {
@@ -277,36 +471,41 @@ export default function DoctorDashboard() {
 
                    return (
                      <div key={day.toString()} style={{ 
-                       minHeight: '100px', 
-                       background: isPending ? '#fef2f2' : 'white', 
-                       border: `2px solid ${isSameDay(day, new Date()) ? 'var(--primary)' : 'var(--border)'}`, 
-                       borderRadius: '8px', 
-                       padding: '8px',
-                       opacity: isCurrentMonth ? 1 : 0.4
+                       minHeight: '120px', 
+                       background: isSameDay(day, new Date()) ? '#F0F9FF' : (isPending && dayVisits.length > 0 ? '#FEF2F2' : 'white'), 
+                       border: `2px solid ${isSameDay(day, new Date()) ? '#0A4D68' : '#F1F5F9'}`, 
+                       borderRadius: '16px', 
+                       padding: '12px',
+                       opacity: isCurrentMonth ? 1 : 0.3,
+                       transition: 'all 0.2s'
                      }}>
                         <div style={{ 
-                          fontWeight: 'bold', 
-                          fontSize: '14px', 
-                          marginBottom: '8px',
-                          color: isPending ? '#dc2626' : 'inherit' // Red if pending appointments
+                          fontWeight: '800', 
+                          fontSize: '15px', 
+                          marginBottom: '10px',
+                          color: isPending && dayVisits.length > 0 ? '#EF4444' : '#1E293B'
                         }}>
                            {format(day, 'd')}
                         </div>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1.5">
                            {dayVisits.map(v => (
-                              <div key={v.id} style={{ 
-                                fontSize: '11px', 
-                                padding: '3px 6px', 
-                                background: v.status === 'COMPLETED' ? '#dcfce7' : '#fee2e2',
-                                color: v.status === 'COMPLETED' ? '#166534' : '#991b1b',
-                                border: `1px solid ${v.status === 'COMPLETED' ? '#bbf7d0' : '#fecaca'}`,
-                                borderRadius: '4px',
+                              <div key={v.id} 
+                                   onClick={() => setCalendarVisitDetail(v)}
+                                   title={`${v.patient.name} - ${v.chiefComplaints || 'Checkup'}`} 
+                                   className="hover:scale-105 transition-transform cursor-pointer"
+                                   style={{ 
+                                fontSize: '10px', 
+                                padding: '4px 8px', 
+                                background: v.status === 'COMPLETED' ? '#ECFDF5' : '#FEE2E2',
+                                color: v.status === 'COMPLETED' ? '#065F46' : '#991B1B',
+                                borderRadius: '6px',
                                 fontWeight: 'bold',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                              }} title={`${v.patient.name} (${v.patient.age}Y) - ${v.chiefComplaints || v.status}`}>
-                                 {v.patient.name} ({v.patient.age}Y) {v.chiefComplaints ? `- ${v.chiefComplaints}` : ''}
+                                textOverflow: 'ellipsis',
+                                border: `1px solid ${v.status === 'COMPLETED' ? '#D1FAE5' : '#FECACA'}`
+                              }}>
+                                 {v.patient.name}
                               </div>
                            ))}
                         </div>
@@ -316,284 +515,335 @@ export default function DoctorDashboard() {
              </div>
           </div>
         ) : (
-          <div className="flex gap-6 fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Waiting List */}
-          <div className="glass-card" style={{ flex: 1 }}>
-            <h3 style={{ marginBottom: '20px' }}>Today's Patients</h3>
-            <div className="flex flex-col gap-3">
-              {queue.length > 0 ? queue.map((v: any) => (
-                <div 
-                  key={v.id} 
-                  className="flex justify-between items-center p-4" 
-                  style={{ 
-                    border: '1px solid var(--border)', borderRadius: '8px', cursor: 'pointer',
-                    background: selectedVisit?.id === v.id ? 'var(--bg-light)' : 'white',
-                    borderColor: selectedVisit?.id === v.id ? 'var(--secondary)' : 'var(--border)'
-                  }}
-                  onClick={async () => { 
-                    setSelectedVisit(v); 
-                    setSelectedTests([]); 
-                    setDrugs([]);
-                    // Update status to CONSULTING
-                    try {
-                      await fetch('/api/consultation', {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ visitId: v.id, status: 'CONSULTING' })
-                      });
-                    } catch (err) {
-                      console.error("Failed to update status", err);
-                    }
-                  }}
-                >
-                  <div>
-                    <span style={{ fontWeight: 'bold', display: 'block' }}>#{v.tokenNumber} - {v.patient.name}</span>
-                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{v.patient.age}Y | {v.patient.gender} | Dr. {v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}</span>
-                  </div>
-                  <span className={`badge ${v.status === 'CONSULTING' ? 'badge-primary' : 'badge-success'}`}>
-                    {v.status === 'CONSULTING' ? 'IN PROGRESS' : 'READY'}
-                  </span>
-                </div>
-              )) : (
-                <p style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No patients ready for consultation yet.</p>
-              )}
-            </div>
-          </div>
+            <div className="lg:col-span-1 flex flex-col gap-6">
+               <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <Clock className="text-secondary" size={20} /> Shift Waiting List
+                  </h3>
+                  <span className="badge badge-primary">{queue.length} Ready</span>
+               </div>
 
-          {/* Consultation Form */}
-          <div className="glass-card" style={{ width: '650px' }}>
-            {selectedVisit ? (
-              <>
-                {/* ── Patient Information Panel ── */}
-                <div style={{ background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '10px', background: '#0A4D68', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold', flexShrink: 0 }}>
-                        {selectedVisit.patient.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: '800', fontSize: '18px', color: '#0F172A' }}>{selectedVisit.patient.name}</div>
-                        <div style={{ fontSize: '13px', color: '#0A4D68', fontWeight: '600', marginTop: '2px' }}>
-                          {selectedVisit.patient.uhid} &nbsp;·&nbsp; Token #{selectedVisit.tokenNumber}
-                        </div>
-                      </div>
-                    </div>
-                    <button 
-                      className="btn btn-outline" style={{ fontSize: '11px', padding: '5px 12px' }}
-                      onClick={() => window.open(`/dashboard/doctor/prescription/${selectedVisit.id}`, '_blank')}
+               <div className="flex flex-col gap-4 overflow-y-auto pr-2" style={{ maxHeight: '65vh' }}>
+                  {queue.length > 0 ? queue.map((v: any) => (
+                    <div 
+                      key={v.id} 
+                      className={`glass-card !p-5 cursor-pointer group hover-scale-102 ${selectedVisit?.id === v.id ? '!border-secondary !shadow-lg bg-secondary/5' : 'bg-white'}`}
+                      onClick={async () => { 
+                        setSelectedVisit(v); 
+                        setSelectedTests([]); 
+                        setDrugs([]);
+                        try {
+                          await fetch('/api/consultation', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ visitId: v.id, status: 'CONSULTING' })
+                          });
+                        } catch (err) {}
+                      }}
                     >
-                      <i className="fa-solid fa-print mr-1"></i> Print Rx
-                    </button>
-                  </div>
-
-                  {/* Vitals Summary */}
-                  <div style={{ borderTop: '1px dashed #BAE6FD', paddingTop: '12px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-                      {[
-                        { label: 'BP', value: selectedVisit.bloodPressure, unit: '' },
-                        { label: 'Pulse', value: selectedVisit.pulse, unit: '' },
-                        { label: 'SpO₂', value: selectedVisit.spo2, unit: '%' },
-                        { label: 'Temp', value: selectedVisit.temperature, unit: '°F' },
-                        { label: 'Weight', value: selectedVisit.weight, unit: 'kg' },
-                        { label: 'Height', value: selectedVisit.height, unit: 'cm' },
-                        { label: 'BMI', value: selectedVisit.bmi, unit: '' },
-                      ].map(({ label, value, unit }) => (
-                        <div key={label} style={{ textAlign: 'center', background: value ? '#0A4D68' : '#E2E8F0', borderRadius: '8px', padding: '8px 4px' }}>
-                          <div style={{ fontSize: '9px', color: value ? '#93C5FD' : '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
-                          <div style={{ fontWeight: '700', color: value ? 'white' : '#94A3B8', fontSize: '13px', marginTop: '2px' }}>
-                            {value ? `${value}${unit}` : 'N/A'}
-                          </div>
-                        </div>
-                      ))}
+                      <div className="flex justify-between items-start mb-3">
+                         <div className="flex flex-col">
+                           <span className="text-xs text-secondary font-bold uppercase tracking-wider mb-1">Token #{v.tokenNumber}</span>
+                           <h4 className="text-base font-bold text-slate-800">{v.patient.name}</h4>
+                         </div>
+                         <div className={`p-2 rounded-lg ${selectedVisit?.id === v.id ? 'bg-secondary text-white' : 'bg-slate-50 text-slate-400'} transition-all`}>
+                           <ChevronRight size={16} />
+                         </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+                         <span className="text-[10px] font-bold text-slate-400">{v.patient.age}Y | {v.patient.gender}</span>
+                         <span className={`text-[10px] font-black px-3 py-1 rounded uppercase tracking-widest ${v.status === 'CONSULTING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                           {v.status === 'CONSULTING' ? 'Consulting' : 'Ready'}
+                         </span>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Lab Results Display */}
-                {selectedVisit.labOrders?.some((l: any) => l.status === 'REPORTED') && (
-                  <div className="mb-6 p-4" style={{ background: '#ecfdf5', borderRadius: '8px', border: '1px solid #10b981' }}>
-                    <h4 style={{ color: '#064e3b', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <i className="fa-solid fa-flask"></i> Lab Reports Ready
-                    </h4>
-                    {selectedVisit.labOrders.filter((l: any) => l.status === 'REPORTED').map((l: any) => (
-                      <div key={l.id} className="mb-3">
-                         <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{l.testName}:</div>
-                         <div style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>{l.reportData}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                <form className="flex flex-col gap-4" onSubmit={handleSubmitConsult}>
-                  {/* Lab Ordering Section */}
-                  <div className="mb-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                    <label className="form-label">Order Lab Tests</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-                      {commonTests.map(test => (
-                        <button 
-                          key={test.name} type="button" 
-                          onClick={() => toggleTest(test)}
-                          className={selectedTests.find(t => t.name === test.name) ? 'btn btn-primary' : 'btn btn-outline'}
-                          style={{ fontSize: '12px', padding: '5px 10px', borderRadius: '5px' }}
-                        >
-                          {test.name}
-                        </button>
-                      ))}
+                  )) : (
+                    <div className="glass-card flex flex-col items-center justify-center p-12 text-center bg-white/50 border-dashed border-2 border-slate-200">
+                       <Users className="text-slate-300 mb-4" size={40} />
+                       <h4 className="text-slate-500 font-bold">Queue is Empty</h4>
+                       <p className="text-xs text-slate-400">Operational token flow will appear here.</p>
                     </div>
-                    {selectedTests.length > 0 && (
-                      <button type="button" className="btn btn-accent" style={{ fontSize: '13px', width: '100%', marginBottom: '20px' }} onClick={handleOrderLabs} disabled={loading}>
-                        Place Lab Order ({selectedTests.length} tests)
-                      </button>
-                    )}
-                  </div>
+                  )}
+               </div>
+            </div>
 
-                  {/* Prescription Section (Natural Handwriting Style) */}
-                  <div className="mb-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                    <label className="form-label">Prescription (Click-to-Select)</label>
-                    
-                    <div className="flex flex-col gap-6 mb-4 p-6" style={{ background: '#fff', borderRadius: '16px', border: '2px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}>
-                      <div>
-                        <input 
-                           type="text" className="form-input !text-lg !font-bold !py-4" style={{ width: '100%', marginBottom: '0', border: 'none', borderBottom: '2px solid #e2e8f0', borderRadius: '0' }} placeholder="Medicine Name..." 
-                           value={currentDrug.name} onChange={e => setCurrentDrug({...currentDrug, name: e.target.value})}
-                        />
-                      </div>
-                      
-                      {/* Dosage Selection */}
-                      <div>
-                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Dosage (Frequency)</div>
-                        <div className="flex flex-wrap gap-2">
-                          {['1-0-1', '1-1-1', '1-0-0', '0-0-1', '1-1-1-1', 'SOS'].map(d => (
-                            <button 
-                              key={d} type="button" 
-                              onClick={() => setCurrentDrug({...currentDrug, dosage: d})}
-                              className={`btn ${currentDrug.dosage === d ? 'btn-primary shadow-sm scale-105' : 'btn-outline border-slate-200'}`}
-                              style={{ fontSize: '12px', padding: '8px 16px', borderRadius: '10px', transition: 'all 0.2s' }}
-                            >
-                              {d}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Duration Selection */}
-                      <div>
-                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Duration (Days)</div>
-                        <div className="flex flex-wrap gap-2">
-                          {['1 Day', '3 Days', '5 Days', '1 Week', '10 Days', '2 Weeks', '1 Month'].map(dur => (
-                            <button 
-                              key={dur} type="button" 
-                              onClick={() => setCurrentDrug({...currentDrug, duration: dur})}
-                              className={`btn ${currentDrug.duration === dur ? 'btn-secondary shadow-sm scale-105' : 'btn-outline border-slate-200'}`}
-                              style={{ fontSize: '12px', padding: '8px 16px', borderRadius: '10px', transition: 'all 0.2s' }}
-                            >
-                              {dur}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Food Instructions Selection */}
-                      <div>
-                        <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: '800', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>When to Take</div>
-                        <div className="flex gap-4">
-                          {[
-                            { label: 'After Food', value: 'After food', icon: 'fa-utensils' },
-                            { label: 'Before Food', value: 'Before food', icon: 'fa-apple-whole' }
-                          ].map(opt => (
-                            <button 
-                              key={opt.value} type="button" 
-                              onClick={() => setCurrentDrug({...currentDrug, instructions: opt.value})}
-                              className={`btn flex-1 flex items-center justify-center gap-2 ${currentDrug.instructions === opt.value ? 'bg-[#0A4D68] text-white shadow-md scale-105' : 'bg-white text-slate-600 border-2 border-slate-200'}`}
-                              style={{ padding: '12px', borderRadius: '12px', fontWeight: 'bold', transition: 'all 0.2s' }}
-                            >
-                               <i className={`fa-solid ${opt.icon}`}></i> {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button type="button" className="btn btn-primary !bg-[#0A4D68] border-none" style={{ width: '100%', fontWeight: '900', padding: '16px', borderRadius: '14px', fontSize: '15px' }} onClick={handleAddDrug}>
-                        <i className="fa-solid fa-plus-circle mr-2"></i> ADD TO PRESCRIPTION
-                      </button>
-                    </div>
-
-                    {/* Prescribed List (Cleaner Hand-style view) */}
-                    {drugs.length > 0 && (
-                      <div className="mb-6 animate-in fade-in slide-in-from-top-4">
-                         {drugs.map((d, i) => (
-                            <div key={i} className="flex justify-between items-center p-4 mb-2" style={{ background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}>
-                               <div className="flex flex-col">
-                                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#1E293B' }}>{d.name}</span>
-                                  <span style={{ fontSize: '12px', color: '#64748B', fontWeight: '600' }}>{d.instructions}</span>
-                               </div>
-                               <div className="text-right">
-                                  <div style={{ fontSize: '14px', fontWeight: '900', color: '#0A4D68' }}>{d.dosage}</div>
-                                  <div style={{ fontSize: '11px', color: '#94A3B8' }}>{d.duration}</div>
-                               </div>
+            {/* Consultation Form */}
+            <div className="lg:col-span-2">
+               {selectedVisit ? (
+                 <div className="glass-card !p-8 animate-fade-in bg-white h-full border-2 border-white">
+                   {/* Patient Info Header */}
+                   <div style={{ background: '#F0F9FF', borderRadius: '16px', padding: '24px', marginBottom: '30px', border: '1px solid #BAE6FD' }}>
+                      <div className="flex justify-between items-start mb-6">
+                         <div className="flex gap-4 items-center">
+                            <div className="w-14 h-14 rounded-xl bg-primary text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-primary/20">
+                               {selectedVisit.patient.name.charAt(0)}
                             </div>
-                         ))}
-                         <button type="button" className="btn btn-secondary shadow-lg active:scale-95" style={{ width: '100%', marginTop: '10px', padding: '14px', borderRadius: '12px', fontWeight: 'bold' }} onClick={handlePrescribe} disabled={loading}>
-                            <i className="fa-solid fa-check-circle mr-2"></i> Finalize ALL Medications
+                            <div>
+                               <h2 className="text-xl font-bold text-slate-800">{selectedVisit.patient.name}</h2>
+                               <p className="text-xs font-bold text-primary tracking-widest uppercase mt-1">
+                                  {selectedVisit.patient.uhid} &nbsp;·&nbsp; Token #{selectedVisit.tokenNumber}
+                               </p>
+                            </div>
+                         </div>
+                         <button className="btn btn-outline h-12 px-6 gap-2" onClick={() => window.open(`/dashboard/doctor/prescription/${selectedVisit.id}`, '_blank')}>
+                            <Printer size={18} /> Print Rx
                          </button>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="form-group">
-                    <label className="form-label !mb-2 !text-[11px] !font-black !uppercase !tracking-wider">Chief Complaints</label>
-                    <textarea 
-                      className="form-input !bg-white" style={{ height: '80px' }} placeholder="Why is the patient here?" required 
-                      value={consultation.chiefComplaints} onChange={e => setConsultation({...consultation, chiefComplaints: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label className="form-label !mb-2 !text-[11px] !font-black !uppercase !tracking-wider">Examination Findings</label>
-                    <textarea 
-                      className="form-input !bg-white" style={{ height: '100px' }} placeholder="Clinical exam results..."  
-                      value={consultation.examination} onChange={e => setConsultation({...consultation, examination: e.target.value})}
-                    />
-                  </div>
+                      <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 pt-4 border-t border-dashed border-blue-200">
+                         {[
+                           { label: 'BP', value: selectedVisit.bloodPressure },
+                           { label: 'Pulse', value: selectedVisit.pulse },
+                           { label: 'SpO₂', value: selectedVisit.spo2, u: '%' },
+                           { label: 'Temp', value: selectedVisit.temperature, u: '°F' },
+                           { label: 'Weight', value: selectedVisit.weight, u: 'kg' },
+                           { label: 'Height', value: selectedVisit.height, u: 'cm' },
+                           { label: 'BMI', value: selectedVisit.bmi }
+                         ].map(v => (
+                           <div key={v.label} className="text-center p-2 rounded-xl bg-white border border-blue-100/50">
+                              <div className="text-[10px] font-black text-slate-400 uppercase">{v.label}</div>
+                              <div className="text-xs font-black text-primary mt-1">{v.value ? `${v.value}${v.u || ''}` : '---'}</div>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label !mb-2 !text-[11px] !font-black !uppercase !tracking-wider">Provisional Diagnosis</label>
-                    <input 
-                      type="text" className="form-input !bg-white" placeholder="Enter diagnosis..." required 
-                      value={consultation.diagnosis} onChange={e => setConsultation({...consultation, diagnosis: e.target.value})}
-                    />
-                  </div>
+                   <form onSubmit={handleSubmitConsult} className="flex flex-col gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         {/* Left Side: Clinical Findings */}
+                         <div className="flex flex-col gap-6">
+                            <div className="form-group relative">
+                               <div className="flex justify-between items-center mb-2">
+                                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Chief Complaints</label>
+                                  <button type="button" onClick={() => startListening('chiefComplaints')} className={`p-2 rounded-full transition-all ${isListening === 'chiefComplaints' ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-slate-100 text-slate-400 hover:text-primary'}`}>
+                                     {isListening === 'chiefComplaints' ? <MicOff size={16} /> : <Mic size={16} />}
+                                  </button>
+                               </div>
+                               <textarea 
+                                 className="form-input !h-24 !bg-slate-50 border-none transition-all focus:!bg-white focus:!ring-2 font-medium" 
+                                 placeholder="Dictate complaints..." required
+                                 value={consultation.chiefComplaints} onChange={e => setConsultation({...consultation, chiefComplaints: e.target.value})}
+                               />
+                            </div>
 
-                  <div className="flex gap-4 mt-2">
-                    <button type="submit" className="btn btn-primary shadow-xl hover:scale-[1.02] active:scale-[0.98]" style={{ flex: 1, padding: '16px', borderRadius: '14px', fontWeight: '900' }} disabled={loading}>
-                      {loading ? "Processing..." : "FINALIZE & COMPLETE CONSULTATION"}
-                    </button>
-                  </div>
-                </form>
-              </>
-            ) : (
-              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                Select a patient from the list to start the consultation.
-              </div>
-            )}
-          </div>
+                            <div className="form-group relative">
+                               <div className="flex justify-between items-center mb-2">
+                                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Examination & History</label>
+                                  <button type="button" onClick={() => startListening('examination')} className={`p-2 rounded-full transition-all ${isListening === 'examination' ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-slate-100 text-slate-400 hover:text-primary'}`}>
+                                     {isListening === 'examination' ? <MicOff size={16} /> : <Mic size={16} />}
+                                  </button>
+                               </div>
+                               <textarea 
+                                 className="form-input !h-32 !bg-slate-50 border-none transition-all focus:!bg-white focus:!ring-2 font-medium" 
+                                 placeholder="Patient clinical history..." 
+                                 value={consultation.examination} onChange={e => setConsultation({...consultation, examination: e.target.value})}
+                               />
+                            </div>
+
+                            <div className="form-group relative">
+                               <div className="flex justify-between items-center mb-2">
+                                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Provisional Diagnosis</label>
+                                  <button type="button" onClick={() => startListening('diagnosis')} className={`p-2 rounded-full transition-all ${isListening === 'diagnosis' ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-slate-100 text-slate-400 hover:text-primary'}`}>
+                                     {isListening === 'diagnosis' ? <MicOff size={16} /> : <Mic size={16} />}
+                                  </button>
+                               </div>
+                               <input 
+                                 type="text" className="form-input !bg-slate-50 border-none transition-all focus:!bg-white focus:!ring-2 font-bold" 
+                                 placeholder="Clinical diagnosis..." required
+                                 value={consultation.diagnosis} onChange={e => setConsultation({...consultation, diagnosis: e.target.value.toUpperCase()})}
+                               />
+                            </div>
+                         </div>
+
+                         {/* Right Side: Rx & Labs */}
+                         <div className="flex flex-col gap-6">
+                            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-tiny">
+                               <div className="flex justify-between items-center mb-4">
+                                  <label className="text-[11px] font-black uppercase tracking-widest text-[#0A4D68]/60">Prescription Builder</label>
+                                  <div className="flex gap-1.5">
+                                     {['OD', 'BD', 'TDS'].map(opt => (
+                                       <button key={opt} type="button" onClick={() => setCurrentDrug({...currentDrug, dosage: opt === 'OD' ? '1-0-0' : opt === 'BD' ? '1-0-1' : '1-1-1'})} className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-black hover:border-primary transition-all">{opt}</button>
+                                     ))}
+                                  </div>
+                               </div>
+                               
+                               <div className="flex flex-col gap-3">
+                                  <input 
+                                    className="form-input !bg-white border-none shadow-sm font-black text-slate-800" 
+                                    placeholder="Drug Name..." 
+                                    value={currentDrug.name} onChange={e => setCurrentDrug({...currentDrug, name: e.target.value.toUpperCase()})}
+                                  />
+                                  <div className="grid grid-cols-2 gap-2">
+                                     <select className="form-input !py-1 !px-3 !bg-white !text-xs font-bold" value={currentDrug.dosage} onChange={e => setCurrentDrug({...currentDrug, dosage: e.target.value})}>
+                                        <option>1-0-1</option>
+                                        <option>1-1-1</option>
+                                        <option>1-0-0</option>
+                                        <option>0-0-1</option>
+                                        <option>SOS</option>
+                                     </select>
+                                     <select className="form-input !py-1 !px-3 !bg-white !text-xs font-bold" value={currentDrug.duration} onChange={e => setCurrentDrug({...currentDrug, duration: e.target.value})}>
+                                        <option>3 Days</option>
+                                        <option>5 Days</option>
+                                        <option>1 Week</option>
+                                        <option>1 Month</option>
+                                     </select>
+                                  </div>
+                                  <button type="button" className="btn btn-primary h-12 w-full !rounded-xl font-black text-sm" onClick={handleAddDrug}>
+                                     <PlusCircle size={18} className="mr-2" /> Commit Drug
+                                  </button>
+                               </div>
+
+                               <div className="mt-4 flex flex-col gap-2 max-h-40 overflow-y-auto">
+                                  {drugs.map((d, i) => (
+                                    <div key={i} className="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100 shadow-sm animate-in slide-in-from-top-2">
+                                       <div className="flex flex-col">
+                                          <span className="text-xs font-black text-slate-800">{d.name || d.drugName}</span>
+                                          <span className="text-[10px] text-slate-400 font-bold uppercase">{d.instructions}</span>
+                                       </div>
+                                       <div className="flex items-center gap-4">
+                                          <div className="text-right">
+                                             <span className="text-[11px] font-black text-primary">{d.dosage}</span>
+                                             <div className="text-[9px] text-slate-400 font-bold">{d.duration}</div>
+                                          </div>
+                                          <button type="button" onClick={() => handleRemoveDrug(i)} className="text-rose-100 hover:text-rose-500 transition-colors">
+                                             <Trash2 size={14} />
+                                          </button>
+                                       </div>
+                                    </div>
+                                  ))}
+                               </div>
+                            </div>
+
+                            <div className="flex flex-col gap-4 p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                               <label className="text-[11px] font-black uppercase tracking-widest text-[#0A4D68]/60 block line-height-none">Diagnostic Orders</label>
+                               <div className="flex flex-wrap gap-2">
+                                  {commonTests.map(test => {
+                                    const isSelected = selectedTests.find(t => t.name === test.name);
+                                    return (
+                                      <button 
+                                        key={test.name} type="button" 
+                                        onClick={() => toggleTest(test)}
+                                        className={`px-4 py-2.5 rounded-full text-[11px] font-bold tracking-wide transition-all duration-300 ${isSelected ? 'bg-primary text-white shadow-lg scale-105 border-0' : 'bg-white text-slate-600 shadow-sm border border-slate-200 hover:bg-slate-50 hover:shadow-md hover:border-primary/30'}`}
+                                      >
+                                        {test.name.split(' (')[0]}
+                                      </button>
+                                    );
+                                  })}
+                               </div>
+                               {selectedTests.length > 0 && (
+                                 <button type="button" className="btn btn-primary w-full h-11 text-xs font-black mt-2" onClick={handleOrderLabs} disabled={loading}>
+                                   Order {selectedTests.length} Laboratory Tests
+                                 </button>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="pt-6 border-t border-slate-100 flex gap-4">
+                         <button type="submit" className="btn btn-primary flex-1 h-16 !rounded-2xl shadow-xl shadow-primary/20 text-lg font-black tracking-tight" disabled={loading}>
+                            {loading ? "Syncing..." : "Finalize Consultation & Print Rx"}
+                         </button>
+                      </div>
+                   </form>
+                 </div>
+               ) : (
+                 <div className="glass-card flex flex-col items-center justify-center p-24 text-center bg-white h-full shadow-soft border-2 border-dashed border-slate-200">
+                    <Stethoscope className="text-primary opacity-20 mb-8" size={80} />
+                    <h2 className="text-slate-400 font-black mb-2 uppercase tracking-widest">Clinical Ready</h2>
+                    <p className="text-slate-500 max-w-sm mx-auto font-bold text-sm">Select a token from the waitlist to begin digital consultation and pharmaceutical order generation.</p>
+                 </div>
+               )}
+            </div>
           </div>
         )}
       </main>
 
+      {/* Calendar Visit Detail Modal */}
+      {calendarVisitDetail && (
+        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" onClick={() => setCalendarVisitDetail(null)}>
+           <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-start">
+                 <div>
+                    <h3 className="text-xl font-bold text-[#0A4D68]">{calendarVisitDetail.patient.name}</h3>
+                    <div className="text-xs font-bold text-slate-500 mt-1">
+                      {calendarVisitDetail.patient.gender} • {calendarVisitDetail.patient.age} Y/O • {calendarVisitDetail.patient.phone || 'No Phone'}
+                    </div>
+                 </div>
+                 <button onClick={() => setCalendarVisitDetail(null)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg">
+                    &times;
+                 </button>
+              </div>
+              <div className="p-6 flex flex-col gap-4">
+                 <div>
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Status</span>
+                    <div className={`mt-1 text-sm font-bold ${calendarVisitDetail.status === 'COMPLETED' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {calendarVisitDetail.status}
+                    </div>
+                 </div>
+                 <div>
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Chief Complaints / Reason</span>
+                    <div className="mt-1 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                      {calendarVisitDetail.chiefComplaints || 'Pending Consultation'}
+                    </div>
+                 </div>
+                 {calendarVisitDetail.diagnosis && (
+                   <div>
+                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Diagnosis</span>
+                      <div className="mt-1 text-sm font-bold text-slate-700">
+                        {calendarVisitDetail.diagnosis}
+                      </div>
+                   </div>
+                 )}
+                 <div className="pt-2">
+                    <button className="btn w-full h-12 bg-slate-100 text-slate-600 font-bold hover:bg-slate-200" onClick={() => setCalendarVisitDetail(null)}>
+                       Close Details
+                    </button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
       {/* Toast Notification Container */}
-      <div className="toast-container">
+      <div className="fixed bottom-10 right-10 flex flex-col gap-4 z-[1000]">
         {toasts.map(t => (
-          <div key={t.id} className="toast flex gap-4">
-            <i className="fa-solid fa-bell" style={{ color: 'var(--secondary)', fontSize: '20px', marginTop: '4px' }}></i>
-            <div>
-              <h4 style={{ fontSize: '15px', marginBottom: '2px', color: 'var(--primary)' }}>New Patient Arrived</h4>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{t.message}</p>
+          <div key={t.id} className="glass-card !p-5 bg-white shadow-2xl border-l-4 border-l-[#F59E0B] flex items-start gap-4 animate-in slide-in-from-right-10 duration-500 max-w-md">
+            <div className="w-10 h-10 rounded-full bg-amber-50 text-[#F59E0B] flex items-center justify-center flex-shrink-0">
+               <Bell size={20} />
             </div>
-            <div className="toast-progress"></div>
+            <div>
+              <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1">Queue Sync</h4>
+              <p className="text-xs font-bold text-slate-500 leading-tight">{t.message}</p>
+            </div>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon, trend, isPositive, trendLabel = "vs last shift" }: any) {
+  return (
+    <div className="glass-card hover-scale-102 transition-transform duration-300 !border-white bg-white/70">
+       <div className="flex justify-between items-start mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-tiny text-primary">
+            {icon}
+          </div>
+          {trend !== undefined && (
+            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black ${
+              isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+            }`}>
+              {isPositive ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}
+              {Math.abs(trend)}%
+            </div>
+          )}
+       </div>
+       <div className="flex flex-col">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-1">{label}</span>
+          <span className="text-3xl font-black text-slate-800 leading-none tracking-tighter">{value}</span>
+       </div>
     </div>
   );
 }

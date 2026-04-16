@@ -14,7 +14,11 @@ import {
   Calendar,
   Bell,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  LayoutDashboard,
+  ArrowUpRight,
+  TrendingDown,
+  Activity
 } from 'lucide-react';
 
 export default function PharmacyPortal() {
@@ -25,6 +29,7 @@ export default function PharmacyPortal() {
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const fetchPrescriptions = async () => {
     try {
@@ -53,9 +58,15 @@ export default function PharmacyPortal() {
     fetchSession();
     fetchPrescriptions();
 
-    // Refresh prescriptions every 30 seconds
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
     const interval = setInterval(fetchPrescriptions, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(timer);
+      clearInterval(interval);
+    };
   }, []);
 
   // Grouped prescriptions by Visit ID
@@ -96,91 +107,107 @@ export default function PharmacyPortal() {
   );
 
   return (
-    <div className="flex min-h-screen bg-[#F7F9FB]">
-      {/* Mobile Menu Overlay */}
-      <div 
-        className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} 
-        onClick={() => setIsSidebarOpen(false)}
-      ></div>
-
-      {/* Sidebar */}
-      <aside className={`sidebar-fixed bg-[#0A4D68] w-280 z-50 flex flex-col ${isSidebarOpen ? 'open' : ''}`}>
-        <div className="p-8 pb-4">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
-              <Pill className="text-white" size={24} />
-            </div>
-            <div>
-              <h2 className="text-white text-xl font-bold tracking-tight m-0 uppercase letter-spacing-1">Malar HMS</h2>
-              <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Pharmacy Portal</span>
-            </div>
-          </div>
-
-          <nav className="flex flex-col gap-2">
-            <button className="sidebar-pill active">
-              <PackageCheck size={18} className="mr-3" /> Dispensing
-            </button>
-            <button className="sidebar-pill opacity-60 cursor-not-allowed">
-              <ClipboardList size={18} className="mr-3" /> Inventory Management
-            </button>
-            <button className="sidebar-pill opacity-60 cursor-not-allowed">
-              <Printer size={18} className="mr-3" /> Labels & Reports
-            </button>
-          </nav>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F2F5' }}>
+      {/* Sidebar - Standardized Premium Format */}
+      <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s', zIndex: 100 }}>
+        <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: 'white' }}>Malar Hospital</h2>
+          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'white' }}>Pharmacy Portal</span>
         </div>
 
-        <div className="mt-auto p-8 border-t border-white/10">
+        <nav style={{ padding: '30px 0', flexGrow: 1 }}>
+          <button 
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <LayoutDashboard size={20} /> 
+            <span style={{ fontWeight: '600' }}>Dispensing</span>
+          </button>
+          
+          <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
+            <ClipboardList size={20} />
+            <span>Inventory Management</span>
+          </div>
+
+          <div style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', opacity: 0.4, cursor: 'not-allowed' }}>
+            <Printer size={20} />
+            <span>Labels & Reports</span>
+          </div>
+        </nav>
+
+        <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <LogoutButton />
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow ml-280 content-main p-8 lg:p-12 animate-fade-in">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div className="flex items-center gap-4">
-            <button 
-              className="hamburger-btn lg:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Menu size={24} />
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-primary tracking-tight mb-1">
-                Pharmacy Services
-              </h1>
-              <p className="text-slate-500 font-medium flex items-center gap-2">
-                <Clock size={16} /> {shift} Shift &nbsp;·&nbsp; {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}
-              </p>
-            </div>
+      <main style={{ flex: 1, marginLeft: '240px', padding: '60px 80px' }} className="animate-fade-in">
+        {/* Header - Standardized Premium Format */}
+        <header style={{ marginBottom: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>Pharmacy Services</h1>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>
+               <Calendar size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px' }} />
+               {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} | Thoothukudi
+            </p>
           </div>
-
-          <div className="flex items-center gap-6 w-full md:w-auto">
-            <div className="relative flex-grow md:flex-grow-0">
-               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-               <input 
-                 type="text" 
-                 placeholder="Search by Patient / UHID..." 
-                 className="form-input !pl-12 !rounded-full !bg-white shadow-soft"
-                 value={searchQuery}
-                 onChange={e => setSearchQuery(e.target.value)}
-               />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+            <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68', display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+              <span style={{ opacity: 0.3 }}>|</span>
+              <span>{(() => {
+                const hour = currentTime.getHours();
+                if (hour >= 6 && hour < 14) return 'MORNING SHIFT';
+                if (hour >= 14 && hour < 22) return 'EVENING SHIFT';
+                return 'NIGHT SHIFT';
+              })()}</span>
             </div>
-            <div className="relative hidden sm:block">
-               <Bell className="text-primary cursor-pointer hover:scale-110 transition-transform" size={22} />
-               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent rounded-full border-2 border-[#F7F9FB]"></span>
+            <div className="relative">
+               <Bell size={24} style={{ color: '#94A3B8' }} />
+               <span style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', background: 'var(--accent)', borderRadius: '50%', border: '2px solid white' }}></span>
             </div>
-            <div className="flex items-center gap-3 bg-white p-2 pr-4 rounded-full shadow-soft">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary text-xl">
-                 {userName ? userName.charAt(0) : 'P'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid #E2E8F0', paddingLeft: '25px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1E293B', textTransform: 'uppercase' }}>{userName || 'Pharmacist'}</div>
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>MALAR HOSPITAL</div>
               </div>
-              <div className="hidden sm:block">
-                <div className="text-xs font-bold text-primary uppercase">Chief Pharmacist</div>
-                <div className="text-sm font-semibold text-slate-700">{userName || 'Loading...'}</div>
+              <div style={{ width: '45px', height: '45px', background: '#F1F5F9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#0A4D68', border: '2px solid white', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+                 {userName ? userName.charAt(0) : 'P'}
               </div>
             </div>
           </div>
         </header>
+
+        {/* KPI Summary Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '40px' }}>
+          <StatCard 
+              label="Pending Fulfillment" 
+              value={filteredGrouped.length} 
+              icon={<ClipboardList style={{ color: '#0A4D68' }} />} 
+              trend={15}
+              isPositive={false}
+              trendLabel="this shift"
+          />
+          <StatCard 
+              label="Dispensed (Today)" 
+              value={84} 
+              icon={<PackageCheck style={{ color: '#10B981' }} />} 
+              isPositive={true}
+              trend={12}
+          />
+          <StatCard 
+              label="Store Alerts" 
+              value={3} 
+              icon={<AlertCircle style={{ color: '#EF4444' }} />} 
+          />
+          <StatCard 
+              label="Avg. Fulfillment" 
+              value="9m" 
+              icon={<Clock style={{ color: '#14B8A6' }} />} 
+              isPositive={true}
+              trend={4}
+          />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Pending List Column */}
@@ -189,10 +216,19 @@ export default function PharmacyPortal() {
               <h3 className="text-lg font-bold flex items-center gap-2">
                 <Clock className="text-secondary" size={20} /> Awaiting Fulfillment
               </h3>
-              <span className="badge badge-warning">{filteredGrouped.length} Pending</span>
+              <div className="relative">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                 <input 
+                   type="text" 
+                   placeholder="Search..." 
+                   className="form-input !pl-9 !py-1 !pr-4 !text-xs !rounded-full !bg-white shadow-soft"
+                   value={searchQuery}
+                   onChange={e => setSearchQuery(e.target.value)}
+                 />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-4 overflow-y-auto pr-2" style={{ maxHeight: '70vh' }}>
+            <div className="flex flex-col gap-4 overflow-y-auto pr-2" style={{ maxHeight: '60vh' }}>
               {filteredGrouped.length > 0 ? filteredGrouped.map((g: any) => (
                 <div 
                   key={g.visit.id} 
@@ -218,7 +254,7 @@ export default function PharmacyPortal() {
                      <span className="text-[10px] font-bold text-primary flex items-center gap-1">
                         Dr. {g.visit?.doctor?.name.replace(/^(dr\.?\s*)+/i, '')}
                      </span>
-                     <span className="text-[10px] text-slate-400 font-medium italic">Pending Checkout</span>
+                     <span className="text-[10px] text-slate-400 font-medium italic">Ready to dispense</span>
                   </div>
                 </div>
               )) : (
@@ -270,7 +306,7 @@ export default function PharmacyPortal() {
                                  <div className="w-10 h-10 bg-primary/5 rounded-full flex items-center justify-center">
                                     <Pill className="text-primary" size={20} />
                                  </div>
-                                 <div>
+                                 <div style={{ textAlign: 'left' }}>
                                     <h5 className="font-extrabold text-[#1E293B] text-lg leading-none">{item.drugName}</h5>
                                     <span className="text-xs font-bold text-secondary">{item.instructions}</span>
                                  </div>
@@ -282,7 +318,7 @@ export default function PharmacyPortal() {
                            </div>
                            <div className="pt-3 border-t border-dashed border-slate-100 flex items-center gap-2">
                               <PackageCheck size={14} className="text-success" />
-                              <span className="text-[11px] font-bold text-slate-400">Verify drug strength and expiry before hand-over.</span>
+                              <span className="text-[11px] font-bold text-slate-400 italic">Verify drug strength and expiry before hand-over.</span>
                            </div>
                         </div>
                       ))}
@@ -312,7 +348,7 @@ export default function PharmacyPortal() {
                          {loading ? (
                            <span className="flex items-center gap-2">
                              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                             Finalizing Transaction...
+                             Finalizing...
                            </span>
                          ) : (
                            <span className="flex items-center gap-2">
@@ -341,3 +377,27 @@ export default function PharmacyPortal() {
   );
 }
 
+// Sub-components
+function StatCard({ label, value, icon, trend, isPositive, trendLabel = "vs yesterday" }: any) {
+  return (
+    <div className="glass-card hover-scale-102 transition-transform duration-300">
+       <div className="flex justify-between items-start mb-4">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shadow-sm text-primary">
+            {icon}
+          </div>
+          {trend !== undefined && (
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold ${
+              isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+            }`}>
+              {isPositive ? <ArrowUpRight size={12} /> : <TrendingDown size={12} />}
+              {Math.abs(trend)}% {trendLabel && <span className="text-[8px] opacity-60 ml-0.5">{trendLabel}</span>}
+            </div>
+          )}
+       </div>
+       <div className="flex flex-col">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</span>
+          <span className="text-2xl font-bold text-slate-800 leading-none">{value}</span>
+       </div>
+    </div>
+  );
+}
