@@ -775,9 +775,9 @@ export default function DoctorDashboard() {
 
       {/* Calendar Visit Detail Modal */}
       {calendarVisitDetail && (
-        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" style={{ padding: '20px' }} onClick={() => setCalendarVisitDetail(null)}>
-           <div className="bg-white rounded-2xl overflow-hidden shadow-2xl" style={{ maxWidth: '450px', width: '100%' }} onClick={e => e.stopPropagation()}>
-              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-start gap-4">
+        <div className="animate-in fade-in" style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: '240px', backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setCalendarVisitDetail(null)}>
+           <div className="bg-white rounded-2xl overflow-hidden shadow-2xl" style={{ maxWidth: '450px', width: '100%', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+              <div className="p-6 flex justify-between items-start gap-4" style={{ backgroundColor: '#F0F9FF', borderBottom: '1px solid #BAE6FD' }}>
                  <div style={{ flex: 1 }}>
                     <h3 className="text-xl font-bold text-[#0A4D68] m-0 mb-2">{calendarVisitDetail.patient.name}</h3>
                     <div className="flex flex-wrap gap-2">
@@ -838,12 +838,12 @@ export default function DoctorDashboard() {
 
       {/* KPI Details Modal */}
       {statModalState && (
-        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" style={{ padding: '20px' }} onClick={() => setStatModalState(null)}>
+        <div className="animate-in fade-in" style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: '240px', backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setStatModalState(null)}>
            <div className="bg-white rounded-2xl flex flex-col overflow-hidden shadow-2xl" style={{ maxWidth: '600px', width: '100%', maxHeight: '85vh' }} onClick={e => e.stopPropagation()}>
-              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-center gap-4 flex-shrink-0">
+              <div className="p-6 flex justify-between items-center gap-4 flex-shrink-0" style={{ backgroundColor: '#F0F9FF', borderBottom: '1px solid #BAE6FD' }}>
                  <h3 className="text-xl font-bold text-[#0A4D68] m-0 flex items-center gap-2">
                    {statModalState.title} 
-                   <span className="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full shadow-sm">{statModalState.list.length}</span>
+                   <span className="font-bold text-xs px-3 py-1 rounded-full shadow-sm" style={{ backgroundColor: '#DBEAFE', color: '#1D4ED8' }}>{statModalState.list.length}</span>
                  </h3>
                  <button onClick={() => setStatModalState(null)} className="flex items-center justify-center bg-white border border-blue-100 rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg hover:bg-rose-50 transition-colors flex-shrink-0" style={{ width: '36px', height: '36px' }}>
                     &times;
