@@ -37,6 +37,7 @@ export default function DoctorDashboard() {
   const [allAppointments, setAllAppointments] = useState<any[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarVisitDetail, setCalendarVisitDetail] = useState<any>(null);
+  const [statModalState, setStatModalState] = useState<{ title: string, list: any[] } | null>(null);
 
   // Toast System
   const [toasts, setToasts] = useState<any[]>([]);
@@ -420,23 +421,35 @@ export default function DoctorDashboard() {
               icon={<Users style={{ color: '#0A4D68' }} />} 
               trend={Math.floor(Math.random() * 10) + 5}
               isPositive={false}
+              onClick={() => setStatModalState({ title: 'Active Queue', list: queue })}
           />
           <StatCard 
               label="Consulting Now" 
               value={selectedVisit ? 1 : 0} 
               icon={<Activity style={{ color: '#10B981' }} />} 
               isPositive={true}
+              onClick={() => {
+                if (selectedVisit) setStatModalState({ title: 'Consulting Now', list: [selectedVisit] });
+              }}
           />
           <StatCard 
               label="Completed Today" 
               value={allAppointments.filter(v => v.status === 'COMPLETED' && isSameDay(new Date(v.visitDate), new Date())).length} 
               icon={<CheckCircle2 style={{ color: '#14B8A6' }} />} 
               isPositive={true}
+              onClick={() => {
+                const list = allAppointments.filter(v => v.status === 'COMPLETED' && isSameDay(new Date(v.visitDate), new Date()));
+                setStatModalState({ title: 'Completed Today', list });
+              }}
           />
           <StatCard 
               label="Advanced Bookings" 
               value={allAppointments.filter(v => new Date(v.visitDate) > new Date()).length} 
               icon={<Calendar style={{ color: '#F59E0B' }} />} 
+              onClick={() => {
+                const list = allAppointments.filter(v => new Date(v.visitDate) > new Date());
+                setStatModalState({ title: 'Advanced Bookings', list });
+              }}
           />
         </div>
 
@@ -820,13 +833,66 @@ export default function DoctorDashboard() {
           </div>
         ))}
       </div>
+
+      {/* KPI Details Modal */}
+      {statModalState && (
+        <div className="fixed inset-0 bg-black/40 z-[1001] flex items-center justify-center animate-in fade-in" onClick={() => setStatModalState(null)}>
+           <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="p-6 bg-[#F0F9FF] border-b border-[#BAE6FD] flex justify-between items-center">
+                 <h3 className="text-xl font-bold text-[#0A4D68]">{statModalState.title} ({statModalState.list.length})</h3>
+                 <button onClick={() => setStatModalState(null)} className="w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-rose-500 shadow-sm font-bold text-lg">
+                    &times;
+                 </button>
+              </div>
+              <div className="p-6 max-h-[60vh] overflow-y-auto">
+                 {statModalState.list.length > 0 ? (
+                   <div className="flex flex-col gap-3">
+                     {statModalState.list.map((v: any, index: number) => (
+                       <div key={v.id || index} className="p-4 border border-slate-100 rounded-xl bg-slate-50 flex justify-between items-center hover:border-primary hover:shadow-md transition-all cursor-pointer group" onClick={() => {
+                           setStatModalState(null);
+                           setCalendarVisitDetail(v);
+                       }}>
+                         <div className="flex flex-col">
+                           <span className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">{v.patient.name}</span>
+                           <span className="text-xs text-slate-500 font-bold mt-1 uppercase">
+                             {v.patient.uhid} • Token #{v.tokenNumber} • {v.patient.gender} • {v.patient.age} Y/O
+                           </span>
+                           <span className="text-[10px] text-slate-400 font-bold mt-1 max-w-md truncate">
+                             {v.chiefComplaints || 'Pending Consultation'}
+                           </span>
+                         </div>
+                         <div className="flex flex-col items-end">
+                           <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${v.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                             {v.status}
+                           </span>
+                           <span className="text-[10px] font-bold text-slate-400 mt-2">
+                             {new Date(v.visitDate).toLocaleDateString('en-GB')}
+                           </span>
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 ) : (
+                   <div className="py-12 text-center flex flex-col items-center">
+                     <Users className="text-slate-200 mb-4" size={48} />
+                     <p className="text-slate-400 font-bold">No patients in this category.</p>
+                   </div>
+                 )}
+              </div>
+           </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
-function StatCard({ label, value, icon, trend, isPositive, trendLabel = "vs last shift" }: any) {
+function StatCard({ label, value, icon, trend, isPositive, trendLabel = "vs last shift", onClick }: any) {
   return (
-    <div className="glass-card hover-scale-102 transition-transform duration-300 !border-white bg-white/70">
+    <div 
+       className={`glass-card transition-all duration-300 !border-white bg-white/70 ${onClick ? 'cursor-pointer hover:scale-105 hover:shadow-xl hover:border-primary/30 active:scale-95' : 'hover-scale-102'}`}
+       onClick={onClick}
+    >
        <div className="flex justify-between items-start mb-4">
           <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center shadow-tiny text-primary">
             {icon}
