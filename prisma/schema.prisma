@@ -20,8 +20,6 @@ model User {
   updatedAt DateTime @updatedAt
   visitsConsulted Visit[] @relation("DoctorVisits")
   authorizedBills Bill[]  @relation("BillAuthorizer")
-  isAvailable   Boolean  @default(true)
-
 
   @@index([email])
 }
@@ -187,3 +185,4 @@ model AuditLog {
   @@index([patientId])
   @@index([userId])
 }
+

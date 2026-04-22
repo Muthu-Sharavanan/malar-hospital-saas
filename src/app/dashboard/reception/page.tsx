@@ -1,31 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import LogoutButton from '@/components/LogoutButton';
-import { 
-  Users, 
-  UserPlus, 
-  CalendarCheck, 
-  UserRoundCheck, 
-  Stethoscope, 
-  Search, 
-  Phone, 
-  MapPin, 
-  Clock, 
-  Calendar,
-  CheckCircle2,
-  AlertCircle,
-  Bell,
-  Trash2,
-  Printer,
-  History,
-  LayoutDashboard,
-  TrendingUp,
-  Activity,
-  ChevronRight,
-  X,
-  CreditCard,
-  FileText
-} from 'lucide-react';
 
 export default function ReceptionDashboard() {
   const [activeTab, setActiveTab] = useState('register');
@@ -34,29 +9,57 @@ export default function ReceptionDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [queue, setQueue] = useState<any[]>([]);
-  const [futureQueue, setFutureQueue] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
   
-  // Modals
+  // Billing Modal State
   const [showBillModal, setShowBillModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
-  const [billingForm, setBillingForm] = useState({ discount: 0, paymentMode: 'CASH', waiverReason: '', authorizingDoc: '' });
+  const [billingForm, setBillingForm] = useState({
+    discount: 0,
+    paymentMode: 'CASH',
+    waiverReason: '',
+    authorizingDoc: ''
+  });
+
+  // History Modal State
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState<{patient: any, history: any[]}|null>(null);
+
+  // Surgery Modal State
+  const [showSurgeryModal, setShowSurgeryModal] = useState(false);
+  const [surgeryForm, setSurgeryForm] = useState({
+    visitId: '',
+    patientName: '',
+    items: [{ itemName: 'Surgeon Fee', amount: 0 }]
+  });
+
+  // Success Modal State
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successInfo, setSuccessInfo] = useState<{title: string, message: string, token: string, uhid?: string, whatsappSent?: boolean}|null>(null);
+  const [successInfo, setSuccessInfo] = useState<{title: string, message: string, token: string, uhid?: string}|null>(null);
+
+  // Duplicate Alert State
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [duplicateInfo, setDuplicateInfo] = useState<{name: string, uhid: string}|null>(null);
 
-  // Form
   const [formData, setFormData] = useState({
-    name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: '', patientId: '', visitDate: '', visitTime: '', reason: '', abhaId: '', consentGranted: false
+    name: '',
+    phone: '',
+    age: '',
+    gender: 'Male',
+    address: '',
+    doctorId: '',
+    patientId: '',
+    abhaId: '',
+    consentGranted: false
   });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+
   const [doctors, setDoctors] = useState<any[]>([]);
 
   const fetchDoctors = async () => {
@@ -70,7 +73,11 @@ export default function ReceptionDashboard() {
           setFormData(prev => ({ ...prev, doctorId: data.users[0].id }));
         }
       }
-    } catch (err) {} finally { setTimeout(() => setIsRefreshing(false), 600); }
+    } catch (err) {
+      console.error("Failed to fetch doctors", err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 600);
+    }
   };
 
   const fetchQueue = async () => {
@@ -78,20 +85,9 @@ export default function ReceptionDashboard() {
       const res = await fetch('/api/register');
       const data = await res.json();
       if (data.success) setQueue(data.visits || data.queue || []);
-    } catch (err) {}
-  };
-
-  const fetchFutureQueue = async () => {
-    try {
-      const res = await fetch('/api/appointments');
-      const data = await res.json();
-      if (data.success) {
-        const midnightToday = new Date();
-        midnightToday.setHours(23, 59, 59, 999);
-        const upcoming = data.visits.filter((v: any) => new Date(v.visitDate) > midnightToday);
-        setFutureQueue(upcoming);
-      }
-    } catch (err) {}
+    } catch (err) {
+      console.error("Failed to fetch queue", err);
+    }
   };
 
   const fetchBills = async () => {
@@ -99,7 +95,9 @@ export default function ReceptionDashboard() {
       const res = await fetch('/api/billing');
       const data = await res.json();
       if (data.success) setBills(data.bills);
-    } catch (err) {}
+    } catch (err) {
+      console.error("Failed to fetch bills", err);
+    }
   };
 
   useEffect(() => {
@@ -107,7 +105,10 @@ export default function ReceptionDashboard() {
     fetchDoctors();
     fetchQueue();
     fetchBills();
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -119,11 +120,16 @@ export default function ReceptionDashboard() {
         setUserName(data.user.name);
         setShift(data.shift);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("Failed to fetch session", err);
+    }
   };
 
   const fetchPatients = async (query: string) => {
-    if (!query) { setSearchResults([]); return; }
+    if (!query) {
+      setSearchResults([]);
+      return;
+    }
     try {
       const res = await fetch(`/api/patients?q=${query}`);
       const data = await res.json();
@@ -131,7 +137,9 @@ export default function ReceptionDashboard() {
         setSearchResults(data.patients);
         setShowSearchResults(true);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("Failed to fetch patients", err);
+    }
   };
 
   const fetchHistory = async (patientId: string) => {
@@ -143,11 +151,14 @@ export default function ReceptionDashboard() {
         setHistoryData({ patient: data.patient, history: data.history });
         setShowHistoryModal(true);
       }
-    } catch (err) {} finally { setLoading(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const selectPatient = (patient: any) => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     setSelectedPatient(patient);
     setFormData({
       ...formData,
@@ -156,10 +167,7 @@ export default function ReceptionDashboard() {
       phone: patient.phone || '',
       age: patient.age.toString(),
       gender: patient.gender,
-      address: patient.address || '',
-      visitDate: '',
-      visitTime: '',
-      reason: ''
+      address: patient.address || ''
     });
     setSearchQuery(patient.phone || patient.name);
     setShowSearchResults(false);
@@ -167,26 +175,36 @@ export default function ReceptionDashboard() {
 
   const clearPatient = () => {
     setSelectedPatient(null);
-    setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', visitDate: '', visitTime: '', reason: '', abhaId: '', consentGranted: false });
+    setFormData({
+      patientId: '',
+      name: '',
+      phone: '',
+      age: '',
+      gender: 'Male',
+      doctorId: '',
+      address: '',
+      abhaId: '',
+      consentGranted: false
+    });
     setSearchQuery('');
   };
 
   useEffect(() => {
+    fetchSession();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === 'register') fetchDoctors();
     if (activeTab === 'queue') fetchQueue();
-    if (activeTab === 'future') fetchFutureQueue();
-    if (activeTab === 'billing') { fetchBills(); fetchDoctors(); }
+    if (activeTab === 'billing') {
+      fetchBills();
+      fetchDoctors();
+    }
   }, [activeTab]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (formData.phone.length !== 10) {
-      alert("❌ Please enter a valid 10-digit mobile number.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
@@ -195,67 +213,59 @@ export default function ReceptionDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        const selectedDoc = doctors.find((d: any) => d.id === formData.doctorId);
-        const docName = selectedDoc ? selectedDoc.name.replace(/^(dr\.?\s*)+/i, '') : 'Consultant';
-        const formattedDate = new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-        const appointmentTime = formData.visitTime ? ` at ${formData.visitTime}` : '';
-
-        const realWaMessage = formData.visitDate 
-          ? `*APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${formattedDate}${appointmentTime}\n*Doctor:* Dr. ${docName}\n*Token:* #${data.visit.tokenNumber}`
-          : `*VISIT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Doctor:* Dr. ${docName}\n*Token:* #${data.visit.tokenNumber}\n*Status:* Confirmed for Today.`;
-
-        if (formData.phone && formData.visitDate) {
-          // In a real scenario, this would be a server-side trigger, but we open WA Web here.
-        }
-
         setSuccessInfo({
           title: data.isNewPatient ? "New Patient Registered!" : "Registration Successful!",
-          message: data.isNewPatient ? `Permanent ID created for ${formData.name}.` : `${formData.name} added to queue.`,
+          message: data.isNewPatient ? `A new permanent ID has been created for ${formData.name}.` : `Returning patient ${formData.name} has been added to the queue.`,
           token: data.visit.tokenNumber,
-          uhid: data.uhid,
-          whatsappSent: !!formData.visitDate
+          uhid: data.uhid
         });
         setShowSuccessModal(true);
-        clearPatient();
-        if (formData.visitDate) { setActiveTab('future'); fetchFutureQueue(); } 
-        else { setActiveTab('queue'); fetchQueue(); }
+        setSelectedPatient(null);
+        setFormData({ name: '', phone: '', age: '', gender: 'Male', address: '', doctorId: doctors[0]?.id || '', patientId: '', abhaId: '', consentGranted: false });
+        setSearchQuery('');
+        setActiveTab('queue'); 
+        fetchQueue();
       } else if (res.status === 409) {
         setDuplicateInfo({ name: formData.name, uhid: data.uhid });
         setShowDuplicateModal(true);
       } else {
         alert("Registration failed: " + data.error);
       }
-    } catch (err) { alert("An error occurred"); } finally { setLoading(false); }
+    } catch (err) {
+      alert("An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleDoctorAvailability = async (userId: string, currentStatus: boolean) => {
-    try {
-      const res = await fetch('/api/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, isAvailable: !currentStatus })
-      });
-      const data = await res.json();
-      if (data.success) fetchDoctors();
-    } catch (err) {}
-  };
+  const handleUpdateBill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const handlePayBill = async () => {
-    if (!selectedBill) return;
+    const isRefund = selectedBill?.paymentStatus === 'PAID';
+
     try {
-      setLoading(true);
-      const res = await fetch(`/api/billing/${selectedBill.id}`, {
-        method: 'PATCH',
+      const res = await fetch('/api/billing', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(billingForm)
+        body: JSON.stringify({ 
+          billId: selectedBill.id, 
+          paymentStatus: isRefund ? 'REFUNDED' : 'PAID',
+          discount: isRefund ? 0 : billingForm.discount,
+          paymentMode: billingForm.paymentMode,
+          waiverReason: isRefund ? '' : billingForm.waiverReason,
+          refundAmount: isRefund ? billingForm.discount : 0, 
+          refundReason: isRefund ? billingForm.waiverReason : '', 
+          authorizingDocId: billingForm.authorizingDoc
+        })
       });
       const data = await res.json();
       if (data.success) {
         setShowBillModal(false);
         fetchBills();
       }
-    } catch (error) {
-      alert("Billing update failed");
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -263,19 +273,47 @@ export default function ReceptionDashboard() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F2F5' }}>
-      {/* Sidebar - Standardized Premium Format */}
-      <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s', zIndex: 100 }}>
+      {/* Sidebar - Old Format with New Icons */}
+      <aside style={{ width: '240px', background: '#0A4D68', color: 'white', display: 'flex', flexDirection: 'column', height: '100vh', position: 'fixed', left: 0, top: 0, transition: 'all 0.3s' }}>
         <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0, color: 'white' }}>Malar Hospital</h2>
-          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'white' }}>Reception Portal</span>
+          <span style={{ fontSize: '10px', opacity: 0.5, letterSpacing: '2px', textTransform: 'uppercase', color: 'white' }}>Receptionist</span>
         </div>
 
         <nav style={{ padding: '30px 0', flexGrow: 1 }}>
-          <SidebarItem active={activeTab === 'register'} icon={<UserPlus size={20} />} label="New Patient" onClick={() => setActiveTab('register')} />
-          <SidebarItem active={activeTab === 'queue'} icon={<Users size={20} />} label="Today's Queue" onClick={() => setActiveTab('queue')} />
-          <SidebarItem active={activeTab === 'future'} icon={<CalendarCheck size={20} />} label="Appointments" onClick={() => setActiveTab('future')} />
-          <SidebarItem active={activeTab === 'billing'} icon={<CreditCard size={20} />} label="Billing Center" onClick={() => setActiveTab('billing')} />
-          <SidebarItem active={activeTab === 'doctors'} icon={<Stethoscope size={20} />} label="Doctors List" onClick={() => setActiveTab('doctors')} />
+          <button 
+             onClick={() => setActiveTab('register')}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeTab === 'register' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <i className="fa-solid fa-user-plus" style={{ width: '20px', opacity: activeTab === 'register' ? 1 : 0.6, fontSize: '16px' }}></i>
+            <span style={{ fontWeight: activeTab === 'register' ? '600' : '400' }}>Registration</span>
+          </button>
+          
+          <button 
+             onClick={() => setActiveTab('queue')}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeTab === 'queue' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <i className="fa-solid fa-list-ol" style={{ width: '20px', opacity: activeTab === 'queue' ? 1 : 0.6, fontSize: '16px' }}></i>
+            <span style={{ fontWeight: activeTab === 'queue' ? '600' : '400' }}>Today's Queue</span>
+          </button>
+
+          <button 
+             onClick={() => setActiveTab('doctors')}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeTab === 'doctors' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <i className="fa-solid fa-user-doctor" style={{ width: '20px', opacity: activeTab === 'doctors' ? 1 : 0.6, fontSize: '16px' }}></i>
+            <span style={{ fontWeight: activeTab === 'doctors' ? '600' : '400' }}>Doctors List</span>
+          </button>
+
+{/* Hiding Billing Center as per client request
+          <button 
+             onClick={() => setActiveTab('billing')}
+             style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: activeTab === 'billing' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '15px' }}
+          >
+            <i className="fa-solid fa-file-invoice-dollar" style={{ width: '20px', opacity: activeTab === 'billing' ? 1 : 0.6, fontSize: '16px' }}></i>
+            <span style={{ fontWeight: activeTab === 'billing' ? '600' : '400' }}>Billing Center</span>
+          </button>
+          */ }
         </nav>
 
         <div style={{ padding: '30px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -284,487 +322,682 @@ export default function ReceptionDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, marginLeft: '240px', padding: '60px 80px' }} className="animate-fade-in">
-        {/* Header */}
+      <main style={{ flex: 1, marginLeft: '240px', padding: '60px 80px' }}>
         <header style={{ marginBottom: '50px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 style={{ fontSize: '36px', fontWeight: '800', color: '#0A4D68', margin: '0 0 10px 0' }}>Reception Dashboard</h1>
-            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>Hospital Operations & Patient Lifecycle | Thoothukudi</p>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '18px', fontWeight: '400' }}>Welcome back! Thoothukudi | Patient Registration & Tokens</p>
           </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
-            <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68' }}>
-               {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })} | {shift} Shift
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '1px solid #E2E8F0', paddingLeft: '25px' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#1E293B' }}>{userName}</div>
-                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>FRONT OFFICE EXECUTIVE</div>
-              </div>
-              <div style={{ width: '45px', height: '45px', background: '#F1F5F9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#0A4D68' }}>
-                 {userName?.charAt(0) || 'R'}
-              </div>
-            </div>
+          <div style={{ background: '#E2E8F0', padding: '10px 25px', borderRadius: '50px', fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', color: '#0A4D68', display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span>{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</span>
+            <span style={{ opacity: 0.3 }}>|</span>
+            <span>{(() => {
+              const hour = currentTime.getHours();
+              if (hour >= 6 && hour < 14) return 'MORNING SHIFT';
+              if (hour >= 14 && hour < 22) return 'EVENING SHIFT';
+              return 'NIGHT SHIFT';
+            })()}</span>
           </div>
         </header>
 
-        {/* KPI Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '40px' }}>
-          <StatCard label="Token Activity" value={queue.length} icon={<Users size={20} />} trend={8} isPositive={true} />
-          <StatCard label="Future Bookings" value={futureQueue.length} icon={<CalendarCheck size={20} />} />
-          <StatCard label="In Consultation" value={queue.filter(v => v.status === 'CONSULTING').length} icon={<Activity size={20} />} isPositive={true} />
-          <StatCard label="Docs On Duty" value={doctors.filter(d => d.isAvailable !== false).length} icon={<UserRoundCheck size={20} />} isPositive={true} />
-        </div>
-
-        {/* Dynamic Content */}
-        <div className="animate-fade-in">
-          {activeTab === 'register' && (
-            <div className="glass-card !p-10 !border-2 !border-white shadow-xl bg-white/70">
-              <div className="flex justify-between items-center mb-10">
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Patient Encounter Info</h2>
-                <div className="relative w-80 group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-all" size={20} />
-                  <input 
-                    type="text" className="form-input !pl-12 !h-12 !bg-slate-50 border-none group-focus-within:!bg-white group-focus-within:!ring-2" 
-                    placeholder="Search UHID / Phone / Name..." value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); fetchPatients(e.target.value); }}
-                    onBlur={() => setTimeout(() => setShowSearchResults(false), 300)}
-                    onFocus={() => searchQuery && setShowSearchResults(true)}
-                  />
-                  {showSearchResults && searchResults.length > 0 && (
-                    <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[200] bg-white border border-slate-100 rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-top-2">
-                       {searchResults.map(p => (
-                         <div key={p.id} className="p-4 hover:bg-slate-50 cursor-pointer border-b last:border-0" onMouseDown={() => selectPatient(p)}>
-                            <div className="font-bold text-slate-800">{p.name} <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded ml-2">{p.uhid}</span></div>
-                            <div className="text-xs text-slate-500 mt-1">{p.phone} | {p.age}Y | {p.gender}</div>
-                         </div>
-                       ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {selectedPatient && (
-                <div className="mb-8 p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex justify-between items-center animate-in zoom-in-95">
-                   <div className="flex gap-5 items-center">
-                      <div className="w-14 h-14 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl font-black shadow-lg shadow-emerald-200">
-                         {selectedPatient.name.charAt(0)}
-                      </div>
-                      <div>
-                         <div className="flex items-center gap-3">
-                            <h4 className="text-lg font-black text-slate-800 uppercase tracking-tight">{selectedPatient.name}</h4>
-                            <span className="text-[10px] font-black bg-emerald-600 text-white px-3 py-1 rounded-full uppercase tracking-widest">Linked Record</span>
-                         </div>
-                         <div className="text-xs font-bold text-emerald-700/60 mt-2 flex gap-4">
-                            <span><b>UHID:</b> {selectedPatient.uhid}</span>
-                            <span><b>PHONE:</b> {selectedPatient.phone}</span>
-                            <span><b>AGE:</b> {selectedPatient.age}Y</span>
-                         </div>
-                      </div>
-                   </div>
-                   <div className="flex gap-3">
-                      <button className="btn btn-outline h-11 px-5 border-emerald-600 text-emerald-600 bg-white" onClick={() => fetchHistory(selectedPatient.id)}><History size={16} className="mr-2" /> Medical History</button>
-                      <button className="btn h-11 w-11 !p-0 bg-rose-100 text-rose-600 border-none" onClick={clearPatient}><Trash2 size={18} /></button>
-                   </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                <div className="form-group">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Patient Full Name</label>
-                  <input type="text" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="Enter name as per Aadhaar" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.toUpperCase()})} />
-                </div>
-                <div className="form-group">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Mobile Number <span className={formData.phone.length === 10 ? 'text-emerald-500' : 'text-rose-500'}>({formData.phone.length}/10)</span></label>
-                  <input type="tel" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="Patient contact" maxLength={10} required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})} />
-                </div>
-                <div className="form-group grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Age</label>
-                    <input type="number" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="Years" required value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Gender</label>
-                    <select className="form-input !bg-slate-50 !h-14 font-bold border-none" required value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
-                      <option>Male</option>
-                      <option>Female</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Consulting Specialist</label>
-                  <select className="form-input !bg-slate-50 !h-14 font-bold border-none" required value={formData.doctorId} onChange={e => setFormData({...formData, doctorId: e.target.value})}>
-                    <option value="">Choose Doctor</option>
-                    {doctors.map(d => <option key={d.id} value={d.id}>{d.name.startsWith('Dr') ? d.name : `Dr. ${d.name}`} {d.specialization ? `(${d.specialization})` : ''}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Appointment Date (Optional)</label>
-                   <input type="date" className="form-input !bg-slate-50 !h-14 font-bold border-none" min={new Date().toISOString().split('T')[0]} value={formData.visitDate} onChange={e => setFormData({...formData, visitDate: e.target.value})} />
-                </div>
-                {formData.visitDate && (
-                  <div className="form-group animate-in slide-in-from-right-4">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">TimeSlot</label>
-                    <input type="time" className="form-input !bg-slate-50 !h-14 font-bold border-none" required value={formData.visitTime} onChange={e => setFormData({...formData, visitTime: e.target.value})} />
-                  </div>
-                )}
-                <div className="form-group">
-                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">ABHA ID (Optional)</label>
-                   <input type="text" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="14-digit ABHA" value={formData.abhaId} onChange={e => setFormData({...formData, abhaId: e.target.value})} />
-                </div>
-                <div className="form-group flex justify-start items-center">
-                   <label className="flex items-center gap-3 cursor-pointer">
-                     <input type="checkbox" className="w-6 h-6 rounded-md border-emerald-500 text-emerald-500 focus:ring-emerald-500 bg-slate-50" checked={formData.consentGranted} onChange={e => setFormData({...formData, consentGranted: e.target.checked})} />
-                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-tight mt-1">Patient explicit consent granted<br/>for records data processing</span>
-                   </label>
-                </div>
-                <div className="form-group md:col-span-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Residential Address</label>
-                  <textarea className="form-input !bg-slate-50 !h-20 font-bold border-none py-4" placeholder="Full address for system records..." value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
-                </div>
-                <div className="md:col-span-2 flex justify-end mt-4">
-                  <button type="submit" disabled={loading} className="btn btn-primary !h-16 !px-12 !rounded-2xl shadow-xl shadow-primary/20 text-lg font-black tracking-tight">{loading ? 'Processing Transaction...' : 'Generate Clinical Token'}</button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {activeTab === 'queue' && (
-            <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white">
-              <div className="flex justify-between items-center mb-10">
-                <h2 className="text-2xl font-black text-slate-800">Operational OPD Queue</h2>
-                <div style={{ background: '#F8FAFC', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', color: '#0A4D68' }}>Total {queue.length} Active Patients</div>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
-                <thead>
-                  <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] text-left">
-                    <th className="pb-4 pl-4">Identification</th>
-                    <th className="pb-4">Demographics</th>
-                    <th className="pb-4">Lifecycle Status</th>
-                    <th className="pb-4">Assigned Consultant</th>
-                    <th className="pb-4 pr-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {queue.length > 0 ? queue.map((v) => (
-                    <tr key={v.id} className="group hover-scale-101 transition-all">
-                      <td className="p-4 bg-slate-50 rounded-l-2xl border-y border-l border-slate-100">
-                        <div className="font-black text-primary text-base">#{v.tokenNumber}</div>
-                        <div className="text-[10px] font-bold text-slate-400 mt-0.5">{v.patient.uhid}</div>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <div className="font-bold text-slate-800">{v.patient.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold">{v.patient.age}Y | {v.patient.gender}</div>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${v.status === 'CONSULTING' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                           {v.status === 'CONSULTING' ? 'Consultation' : 'Waiting'}
-                        </span>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <div className="flex items-center gap-2">
-                           <div className="w-6 h-6 rounded-full bg-slate-200 text-[10px] flex items-center justify-center font-black">DR</div>
-                           <span className="text-xs font-bold text-slate-600">Dr. {v.doctor?.name.replace(/^(dr\.?\s*)+/i, '') || 'Consultant'}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 bg-slate-50 rounded-r-2xl border-y border-r border-slate-100 text-right">
-                         <button className="btn btn-outline h-9 px-4 text-[10px]" onClick={() => fetchHistory(v.patientId)}>History</button>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={5} className="py-20 text-center font-bold text-slate-300">No active traffic in current shift.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {activeTab === 'future' && (
-            <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white">
-              <div className="flex justify-between items-center mb-10">
-                <h2 className="text-2xl font-black text-slate-800">Advanced Appointments</h2>
-                <div style={{ background: '#F8FAFC', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', color: '#0A4D68' }}>Total {futureQueue.length} Bookings</div>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
-                <thead>
-                  <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] text-left">
-                    <th className="pb-4 pl-4">Date & Time</th>
-                    <th className="pb-4">Patient Narrative</th>
-                    <th className="pb-4">Scheduled Consultant</th>
-                    <th className="pb-4 pr-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {futureQueue.length > 0 ? futureQueue.map((v) => (
-                    <tr key={v.id} className="group hover-scale-101 transition-all">
-                      <td className="p-4 bg-slate-50 rounded-l-2xl border-y border-l border-slate-100">
-                        <div className="font-black text-slate-800 text-sm">{new Date(v.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
-                        <div className="text-[10px] font-bold text-primary mt-0.5">{v.visitTime || 'TBD'}</div>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <div className="font-bold text-slate-800">{v.patient.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold">{v.chiefComplaints || 'General Checkup'}</div>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <div className="text-xs font-bold text-slate-600">Dr. {v.doctor?.name.replace(/^(dr\.?\s*)+/i, '') || 'Consultant'}</div>
-                      </td>
-                      <td className="p-4 bg-slate-50 rounded-r-2xl border-y border-r border-slate-100 text-right">
-                         <button className="btn btn-primary h-9 px-4 text-[10px] !bg-emerald-500 !shadow-none" onClick={() => {
-                            const msg = `Reminder: Appointment for ${v.patient.name} on ${new Date(v.visitDate).toLocaleDateString()} with Dr. ${v.doctor.name} at Malar Hospital.`;
-                            window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, '_blank');
-                         }}>Remind</button>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={4} className="py-20 text-center font-bold text-slate-300">No future appointments scheduled.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {activeTab === 'billing' && (
-            <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white">
-              <div className="flex justify-between items-center mb-10">
-                <h2 className="text-2xl font-black text-slate-800">Financial Clearance Center</h2>
-                <div style={{ background: '#F8FAFC', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', color: '#0A4D68' }}>Total {bills.length} Records</div>
-              </div>
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
-                <thead>
-                  <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] text-left">
-                    <th className="pb-4 pl-4">Invoice Subject</th>
-                    <th className="pb-4">Classification</th>
-                    <th className="pb-4">Status</th>
-                    <th className="pb-4">Net Amount</th>
-                    <th className="pb-4 pr-4 text-right">Disbursement</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bills.length > 0 ? bills.map((b) => (
-                    <tr key={b.id} className="group hover-scale-101 transition-all">
-                      <td className="p-4 bg-slate-50 rounded-l-2xl border-y border-l border-slate-100">
-                        <div className="font-bold text-slate-800">{b.visit.patient.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold">UHID: {b.visit.patient.uhid}</div>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{b.type}</span>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100">
-                         <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${b.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                           {b.paymentStatus}
-                         </span>
-                      </td>
-                      <td className="p-4 bg-slate-50 border-y border-slate-100 font-black text-primary">₹{b.finalAmount}</td>
-                      <td className="p-4 bg-slate-50 rounded-r-2xl border-y border-r border-slate-100 text-right">
-                         <div className="flex justify-end gap-2">
-                            {b.paymentStatus === 'UNPAID' ? (
-                               <button className="btn btn-primary h-9 px-4 text-[10px]" onClick={() => { setSelectedBill(b); setShowBillModal(true); }}>Collect</button>
-                            ) : (
-                               <button className="btn btn-outline h-9 px-4 text-[10px]" onClick={() => window.open(`/dashboard/reception/receipt/${b.id}`, '_blank')}>Print</button>
-                            )}
-                         </div>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={5} className="py-20 text-center font-bold text-slate-300">No financial records found.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {activeTab === 'doctors' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
-              {doctors.map(doc => (
-                <div key={doc.id} className="glass-card !p-8 bg-white border-2 border-white hover-scale-102 transition-all">
-                   <div className="flex justify-between items-start mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-primary text-2xl font-black">
-                         {doc.name.charAt(0)}
-                      </div>
-                      <button 
-                        onClick={() => toggleDoctorAvailability(doc.id, doc.isAvailable !== false)}
-                        className={`h-10 w-10 flex items-center justify-center rounded-xl transition-all ${doc.isAvailable !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}
-                      >
-                         {doc.isAvailable !== false ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-                      </button>
-                   </div>
-                   <h3 className="text-xl font-black text-slate-800 tracking-tight">{doc.name.startsWith('Dr') ? doc.name : `Dr. ${doc.name}`}</h3>
-                   <p className="text-xs font-bold text-slate-400 mt-2 tracking-widest uppercase">{doc.specialization || 'Clinical Specialist'}</p>
-                   <div className="mt-8 flex justify-between items-center pt-6 border-t border-slate-50">
-                      <div className="flex flex-col">
-                         <span className="text-[10px] font-black text-slate-300 uppercase letter-spacing-1">Current Status</span>
-                         <span className={`text-[11px] font-black mt-0.5 ${doc.isAvailable !== false ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {doc.isAvailable !== false ? 'ONSITE & ACTIVE' : 'OFFLINE'}
-                         </span>
-                      </div>
-                      <span className="text-xs font-black text-slate-200 uppercase tracking-widest">{doc.role}</span>
-                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Success Modal */}
-        {showSuccessModal && (
-          <div className="modal-overlay">
-            <div className="glass-card !p-12 !max-w-md bg-white border-2 border-white text-center animate-in zoom-in-95">
-               <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-100">
-                  <CheckCircle2 size={40} />
-               </div>
-               <h2 className="text-3xl font-black text-slate-800 mb-4">{successInfo?.title}</h2>
-               <p className="text-slate-500 font-medium mb-10 leading-relaxed">{successInfo?.message}</p>
-               
-               <div className="bg-slate-50 rounded-2xl p-8 mb-10 border border-slate-100">
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-2">Clinical Token ID</div>
-                  <div className="text-5xl font-black text-primary">#{successInfo?.token}</div>
-                  {successInfo?.uhid && (
-                    <div className="mt-8 pt-8 border-t border-dashed border-slate-200">
-                       <div className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-2">Hospital Universal ID (UHID)</div>
-                       <div className="text-2xl font-black text-slate-800">{successInfo.uhid}</div>
-                    </div>
-                  )}
-               </div>
-
-               <button className="btn btn-primary w-full h-16 !rounded-2xl text-lg font-black" onClick={() => setShowSuccessModal(false)}>Proceed to Next Registration</button>
-            </div>
-          </div>
-        )}
-
-        {/* History Modal */}
-        {showHistoryModal && historyData && (
-          <div className="modal-overlay">
-            <div className="glass-card !max-w-3xl !max-h-[85vh] bg-white border-2 border-white overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
-               <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Digital Clinical Records</h2>
-                    <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">{historyData.patient.name} | {historyData.patient.uhid}</p>
-                  </div>
-                  <button className="h-12 w-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400" onClick={() => setShowHistoryModal(false)}><X size={20} /></button>
-               </div>
-               <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-6 bg-slate-50/50">
-                  {historyData.history.length > 0 ? historyData.history.map(v => (
-                    <div key={v.id} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                       <div className="flex justify-between items-start mb-6 pb-6 border-b border-dashed border-slate-100">
-                          <div className="flex flex-col">
-                             <span className="text-xs font-black text-slate-300 uppercase tracking-widest mb-1">Visit Narrative</span>
-                             <span className="text-lg font-black text-slate-800">{new Date(v.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
-                          </div>
-                          <div className="px-4 py-2 bg-primary/5 text-primary rounded-xl text-xs font-black border border-primary/10">Dr. {v.doctor?.name || 'Consultant'}</div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-8 text-xs font-medium">
-                          <div className="flex flex-col gap-4">
-                             <div>
-                                <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Diagnosis</span>
-                                <div className="text-sm font-bold text-slate-700">{v.diagnosis || 'Clinical evaluation pending'}</div>
-                             </div>
-                             <div>
-                                <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Complaints</span>
-                                <div className="text-sm font-bold text-slate-700">{v.chiefComplaints || 'Standard Checkup'}</div>
-                             </div>
-                          </div>
-                          <div className="flex flex-col gap-4">
-                             {v.prescriptions?.length > 0 && (
-                               <div>
-                                  <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Medications</span>
-                                  <div className="flex flex-wrap gap-2">
-                                     {v.prescriptions.map((p:any) => <span key={p.id} className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-black border border-emerald-100">{p.drugName} ({p.dosage})</span>)}
-                                  </div>
-                               </div>
-                             )}
-                             {v.labOrders?.length > 0 && (
-                               <div>
-                                  <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Diagnostic Orders</span>
-                                  <div className="flex flex-wrap gap-2">
-                                     {v.labOrders.map((l:any) => <span key={l.id} className="bg-primary/5 text-primary px-3 py-1 rounded-lg font-black border border-primary/10">{l.testName}</span>)}
-                                  </div>
-                               </div>
-                             )}
-                          </div>
-                       </div>
-                    </div>
-                  )) : (
-                    <div className="py-20 text-center font-bold text-slate-300">No medical history found for this UHID.</div>
-                  )}
-               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Bill Modal */}
         {showBillModal && selectedBill && (
           <div className="modal-overlay">
-            <div className="glass-card !p-10 !max-w-md bg-white border-2 border-white animate-in zoom-in-95">
-               <h2 className="text-2xl font-black text-slate-800 mb-2">Payment Collection</h2>
-               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">Ref: {selectedBill.visit.patient.name} | ₹{selectedBill.finalAmount}</p>
-               
-               <div className="flex flex-col gap-6">
-                  <div className="form-group">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Payment Instrument</label>
-                     <select className="form-input !h-12 font-bold" value={billingForm.paymentMode} onChange={e => setBillingForm({...billingForm, paymentMode: e.target.value})}>
-                        <option>CASH</option>
-                        <option>UPI / QR</option>
-                        <option>CARD</option>
-                        <option>INSURANCE</option>
-                     </select>
+            <div className="glass-card modal-content" style={{ width: '500px' }}>
+               <h3 style={{ marginBottom: '20px' }}>{selectedBill.paymentStatus === 'PAID' ? 'Issue Refund' : `Manage Bill: ${selectedBill.type}`}</h3>
+               <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginBottom: '20px' }}>
+                  <div className="flex justify-between mb-2">
+                    <span style={{ color: 'var(--text-muted)' }}>Patient</span>
+                    <span style={{ fontWeight: 'bold' }}>{selectedBill.visit.patient.name}</span>
                   </div>
-                  <div className="form-group">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Discount / Waiver (₹)</label>
-                     <input type="number" className="form-input !h-12 font-bold" value={billingForm.discount} onChange={e => setBillingForm({...billingForm, discount: parseInt(e.target.value) || 0})} />
+                  <div className="flex justify-between">
+                    <span style={{ color: 'var(--text-muted)' }}>{selectedBill.paymentStatus === 'PAID' ? 'Amount Paid' : 'Original Amount'}</span>
+                    <span style={{ fontWeight: 'bold' }}>₹{selectedBill.paymentStatus === 'PAID' ? selectedBill.finalAmount : selectedBill.amount}</span>
                   </div>
-                  <button className="btn btn-primary w-full h-14 !rounded-xl font-black text-lg" onClick={handlePayBill} disabled={loading}>Confirm Receipt of ₹{selectedBill.finalAmount - (billingForm.discount || 0)}</button>
-                  <button className="btn btn-outline w-full h-14 !rounded-xl border-none text-slate-400" onClick={() => setShowBillModal(false)}>Cancel</button>
                </div>
+
+               <form onSubmit={handleUpdateBill}>
+                  <div className="form-group">
+                    <label className="form-label">{selectedBill.paymentStatus === 'PAID' ? 'Refund Amount (₹)' : 'Apply Discount (₹)'}</label>
+                    <input 
+                      type="number" className="form-input" placeholder="0"
+                      max={selectedBill.paymentStatus === 'PAID' ? selectedBill.finalAmount : undefined}
+                      value={billingForm.discount} onChange={e => setBillingForm({...billingForm, discount: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+
+                  {billingForm.discount > 0 && (
+                    <>
+                      <div className="form-group">
+                        <label className="form-label">Authorizing Doctor (Required)</label>
+                        <select 
+                          className="form-input" required
+                          value={billingForm.authorizingDoc} onChange={e => setBillingForm({...billingForm, authorizingDoc: e.target.value})}
+                        >
+                          <option value="">Select Doctor</option>
+                          {doctors.map((doc: any) => (
+                            <option key={doc.id} value={doc.id}>{doc.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">{selectedBill.paymentStatus === 'PAID' ? 'Refund Reason' : 'Waiver Reason'}</label>
+                        <select 
+                          className="form-input" required
+                          value={billingForm.waiverReason} onChange={e => setBillingForm({...billingForm, waiverReason: e.target.value})}
+                        >
+                          {selectedBill.paymentStatus === 'PAID' ? (
+                            <>
+                              <option>Service Cancelled</option>
+                              <option>Patient Dissatisfied</option>
+                              <option>Billing Error</option>
+                              <option>Doctor Discretion</option>
+                            </>
+                          ) : (
+                            <>
+                              <option>Economically Poor</option>
+                              <option>Family / Staff</option>
+                              <option>Doctor Discretion</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="form-group">
+                    <label className="form-label">{selectedBill.paymentStatus === 'PAID' ? 'Refund Mode' : 'Payment Mode'}</label>
+                    <select 
+                      className="form-input"
+                      value={billingForm.paymentMode} onChange={e => setBillingForm({...billingForm, paymentMode: e.target.value})}
+                    >
+                      <option>CASH</option>
+                      <option>UPI</option>
+                      <option>CARD</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-4 mt-6">
+                    <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowBillModal(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={loading}>
+                       {loading ? "Processing..." : selectedBill.paymentStatus === 'PAID' ? `Confirm Refund ₹${billingForm.discount || 0}` : `Collect ₹${selectedBill.amount - (billingForm.discount || 0)}`}
+                    </button>
+                  </div>
+               </form>
             </div>
           </div>
         )}
 
-        {/* Duplicate Modal */}
-        {showDuplicateModal && (
+        {showSurgeryModal && (
           <div className="modal-overlay">
-            <div className="glass-card !p-12 bg-white border-2 border-white text-center animate-in zoom-in-95">
-               <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-8">
-                  <AlertCircle size={40} />
-               </div>
-               <h2 className="text-2xl font-black text-slate-800 mb-4">Patient Integrity Conflict</h2>
-               <p className="text-slate-500 font-medium mb-10 leading-relaxed">The patient <strong>{duplicateInfo?.name}</strong> is already registered under UHID: <strong>{duplicateInfo?.uhid}</strong>.</p>
-               <button className="btn btn-primary w-full h-14 !rounded-xl" onClick={() => setShowDuplicateModal(false)}>Acknowledge & Search</button>
+            <div className="glass-card modal-content" style={{ width: '500px' }}>
+              <div className="flex justify-between items-center mb-6">
+                <h3>Add Surgery Bill: {surgeryForm.patientName}</h3>
+                <button className="btn btn-outline" style={{ padding: '5px 10px' }} onClick={() => setShowSurgeryModal(false)}>Cancel</button>
+              </div>
+              
+              <div className="flex flex-col gap-3 mb-6">
+                {surgeryForm.items.map((item: any, idx: number) => (
+                  <div key={idx} className="flex gap-2">
+                    <input 
+                      type="text" className="form-input" placeholder="Item Name (e.g. OT Charge)" style={{ flex: 2 }}
+                      value={item.itemName} onChange={e => {
+                        const newItems = [...surgeryForm.items];
+                        newItems[idx].itemName = e.target.value;
+                        setSurgeryForm({...surgeryForm, items: newItems});
+                      }}
+                    />
+                    <input 
+                      type="number" className="form-input" placeholder="Amount" style={{ flex: 1 }}
+                      value={item.amount} onChange={e => {
+                        const newItems = [...surgeryForm.items];
+                        newItems[idx].amount = parseFloat(e.target.value) || 0;
+                        setSurgeryForm({...surgeryForm, items: newItems});
+                      }}
+                    />
+                    <button type="button" className="btn btn-outline" style={{ color: '#ef4444', borderColor: '#ef4444' }} onClick={() => {
+                       const newItems = surgeryForm.items.filter((_, i) => i !== idx);
+                       setSurgeryForm({...surgeryForm, items: newItems});
+                    }}><i className="fa-solid fa-trash"></i></button>
+                  </div>
+                ))}
+                <button type="button" className="btn btn-outline w-fit" onClick={() => setSurgeryForm({...surgeryForm, items: [...surgeryForm.items, {itemName: '', amount: 0}]})}>
+                  + Add Item
+                </button>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', marginBottom: '20px' }}>
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Amount:</span>
+                  <span>₹{surgeryForm.items.reduce((sum: number, i: any) => sum + i.amount, 0)}</span>
+                </div>
+              </div>
+
+              <button 
+                className="btn btn-primary w-full"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    const res = await fetch('/api/billing', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        visitId: surgeryForm.visitId,
+                        type: 'SURGERY',
+                        surgeryCharges: surgeryForm.items,
+                        paymentStatus: 'UNPAID'
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      setShowSurgeryModal(false);
+                      alert("Surgery bill created successfully!");
+                      fetchBills();
+                    }
+                  } catch (err) { alert("Failed to create surgery bill"); }
+                  finally { setLoading(false); }
+                }}
+              >
+                Create Surgery Bill
+              </button>
             </div>
+          </div>
+        )}
+
+        {showDuplicateModal && duplicateInfo && (
+          <div className="modal-overlay">
+            <div className="glass-card modal-content" style={{ width: '400px', textAlign: 'center', borderColor: 'var(--accent)' }}>
+              <div style={{ fontSize: '50px', color: 'var(--accent)', marginBottom: '20px' }}>
+                <i className="fa-solid fa-circle-exclamation underline-accent"></i>
+              </div>
+              <h3 style={{ marginBottom: '10px' }}>Patient Already Exists</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
+                <strong>{duplicateInfo?.name}</strong> is already registered in our system.
+              </p>
+              
+              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+                <span style={{ fontSize: '12px', textTransform: 'uppercase', display: 'block', color: 'var(--text-muted)' }}>Existing Patient ID</span>
+                <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--accent)' }}>{duplicateInfo?.uhid}</span>
+              </div>
+
+              <p style={{ fontSize: '13px', marginBottom: '20px', color: 'var(--text-muted)' }}>
+                Please use the search bar to find and select this patient if they are returning for a new visit.
+              </p>
+
+              <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => setShowDuplicateModal(false)}>
+                Got it, Thanks!
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showSuccessModal && successInfo && (
+          <div className="modal-overlay">
+            <div className="glass-card modal-content animate-fade-in" style={{ width: '400px', textAlign: 'center', padding: '30px' }}>
+              <div style={{ fontSize: '50px', color: '#10b981', marginBottom: '20px' }}>
+                 <i className="fa-solid fa-circle-check"></i>
+              </div>
+              <h2 style={{ marginBottom: '10px' }}>{successInfo?.title}</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '25px' }}>{successInfo?.message}</p>
+              
+              <div style={{ background: 'rgba(0,0,0,0.05)', borderRadius: '12px', padding: '20px', marginBottom: '25px' }}>
+                 <div style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '5px' }}>Token assigned</div>
+                 <div style={{ fontSize: '36px', fontWeight: 'bold' }}>#{successInfo?.token}</div>
+                 {successInfo?.uhid && (
+                   <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '5px' }}>Patient ID (Lifelong)</div>
+                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--primary)' }}>{successInfo.uhid}</div>
+                   </div>
+                 )}
+              </div>
+
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowSuccessModal(false)}>
+                Awesome, Got it!
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showHistoryModal && historyData && (
+          <div className="modal-overlay">
+            <div className="glass-card modal-content" style={{ width: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
+               <div className="flex justify-between items-center mb-4">
+                  <h3>Patient History: {historyData?.patient?.name}</h3>
+                  <button className="btn btn-outline" style={{ padding: '5px 10px' }} onClick={() => setShowHistoryModal(false)}>Close</button>
+               </div>
+               <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginBottom: '20px', fontSize: '13px' }}>
+                  <div style={{ marginBottom: '5px' }}>
+                     <strong>UHID:</strong> {historyData?.patient?.uhid} {historyData?.patient?.abhaId && <span>| <strong>ABHA:</strong> {historyData.patient.abhaId}</span>} | <strong>Phone:</strong> {historyData?.patient?.phone}
+                  </div>
+                  <div style={{ marginBottom: '5px' }}>
+                     <strong>Age/Gender:</strong> {historyData?.patient?.age}Y, {historyData?.patient?.gender}
+                     {historyData?.patient?.address && <span> | <strong>Address:</strong> {historyData?.patient?.address}</span>}
+                  </div>
+                  <div style={{ color: historyData?.patient?.consentGranted ? '#10b981' : '#f43f5e', fontWeight: 'bold', marginTop: '8px' }}>
+                     {historyData?.patient?.consentGranted ? '✓ DPDP Consent Granted' : '✗ DPDP Consent Pending'}
+                  </div>
+               </div>
+
+               {historyData.history.length === 0 ? (
+                 <p className="text-center" style={{ color: 'var(--text-muted)' }}>No previous visits found.</p>
+               ) : (
+                 <div className="flex flex-col gap-4">
+                   {historyData.history.map((v: any) => (
+                      <div key={v.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '15px', background: 'white' }}>
+                         <div className="flex justify-between items-center mb-2" style={{ borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+                           <span style={{ fontWeight: 'bold' }}>{new Date(v.visitDate).toLocaleDateString()}</span>
+                           <span className="badge badge-primary">Dr. {v.doctor.name.trim().replace(/^(dr\.?\s*)+/i, '')}</span>
+                         </div>
+                         <div style={{ fontSize: '13px', marginTop: '10px' }}>
+                           {v.diagnosis && <p><strong>Diagnosis:</strong> {v.diagnosis}</p>}
+                           {v.chiefComplaints && <p><strong>Complaints:</strong> {v.chiefComplaints}</p>}
+                           
+                           {v.prescriptions?.length > 0 && (
+                             <div className="mt-2 text-xs">
+                               <strong>Prescriptions:</strong> {v.prescriptions.map((p: any) => p.drugName).join(', ')}
+                             </div>
+                           )}
+                           {v.labOrders?.length > 0 && (
+                             <div className="mt-1 text-xs">
+                               <strong>Lab Tests:</strong> {v.labOrders.map((l: any) => l.testName).join(', ')}
+                             </div>
+                           )}
+                         </div>
+                      </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'register' && (
+          <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '40px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }} className="animate-fade-in">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+              <h2 style={{ fontSize: '26px', fontWeight: 'bold', color: '#0A4D68', margin: 0 }}>Patient Encounter Info</h2>
+              <div style={{ position: 'relative', width: '320px' }}>
+                <i className="fa-solid fa-search" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }}></i>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Search Phone / Name..." 
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    fetchPatients(e.target.value);
+                  }}
+                  onBlur={() => setTimeout(() => setShowSearchResults(false), 400)}
+                  onFocus={() => searchQuery && setShowSearchResults(true)}
+                  style={{ paddingLeft: '45px', border: '1px solid #E2E8F0', borderRadius: '8px', height: '45px', fontSize: '15px' }}
+                />
+                
+                {showSearchResults && searchResults.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', marginTop: '5px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', maxHeight: '300px', overflowY: 'auto' }}>
+                    {searchResults.map((p: any) => (
+                      <div 
+                        key={p.id} 
+                        style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9', transition: 'background 0.2s' }}
+                        onMouseDown={() => selectPatient(p)}
+                        onMouseOver={(e) => e.currentTarget.style.background = '#F8FAFC'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                      >
+                        <div style={{ fontWeight: 'bold', color: '#0A4D68' }}>{p.name} <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '400' }}>{p.uhid}</span></div>
+                        <div style={{ fontSize: '12px', color: '#64748B' }}>{p.phone} | {p.age}Y | {p.gender}</div>
+                        {p.address && <div style={{ fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}><i className="fa-solid fa-location-dot" style={{ fontSize: '10px' }}></i> {p.address}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {selectedPatient && (
+              <div className="animate-fade-in" style={{ background: '#F0FDFA', border: '1px solid #CCFBF1', borderRadius: '12px', padding: '20px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: '#14B8A6', color: 'white', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 'bold' }}>
+                    {selectedPatient.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <h4 style={{ margin: 0, color: '#0F172A', fontWeight: '800' }}>{selectedPatient.name}</h4>
+                      <span style={{ fontSize: '11px', background: '#14B8A6', color: 'white', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>EXISTING PATIENT</span>
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#64748B', marginTop: '4px', display: 'flex', gap: '15px' }}>
+                      <span><strong>UHID:</strong> {selectedPatient.uhid}</span>
+                      <span><strong>PHONE:</strong> {selectedPatient.phone}</span>
+                      <span><strong>AGE/GENDER:</strong> {selectedPatient.age}Y / {selectedPatient.gender}</span>
+                    </div>
+                    {selectedPatient.address && <div style={{ fontSize: '13px', color: '#64748B', marginTop: '2px' }}><strong>ADDRESS:</strong> {selectedPatient.address}</div>}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                   <button type="button" onClick={() => window.open(`/api/patients/${selectedPatient.id}/export`, '_blank')} style={{ background: '#0A4D68', border: 'none', color: 'white', padding: '8px 15px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>Export JSON</button>
+                   <button type="button" onClick={() => fetchHistory(selectedPatient.id)} style={{ background: 'white', border: '1px solid #14B8A6', color: '#14B8A6', padding: '8px 15px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>View History</button>
+                   <button type="button" onClick={clearPatient} style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }} title="Clear Selection"><i className="fa-solid fa-times"></i></button>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>FULL NAME</label>
+                <input 
+                  type="text" className="form-input" placeholder="Patient Name" required
+                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.toUpperCase()})}
+                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>PHONE NUMBER</label>
+                <input 
+                  type="tel" className="form-input" placeholder="+91" required
+                  value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
+                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="age" className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>AGE</label>
+                <input 
+                  id="age"
+                  name="age"
+                  type="text" 
+                  inputMode="numeric"
+                  className="form-input" 
+                  placeholder="e.g. 35" 
+                  required
+                  value={formData.age} 
+                  onChange={e => setFormData({...formData, age: e.target.value})}
+                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>GENDER</label>
+                <select 
+                  className="form-input" required
+                  value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}
+                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                 <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>ABHA ID</label>
+                 <input type="text" className="form-input" placeholder="14-digit ABHA (Optional)" value={formData.abhaId} onChange={e => setFormData({...formData, abhaId: e.target.value})} style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }} />
+              </div>
+              <div className="form-group flex justify-start items-center">
+                 <label className="flex items-center gap-3 cursor-pointer">
+                   <input type="checkbox" className="w-5 h-5 rounded-md" checked={formData.consentGranted} onChange={e => setFormData({...formData, consentGranted: e.target.checked})} />
+                   <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest leading-tight mt-1">Patient explicit consent granted<br/>for records data processing</span>
+                 </label>
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>
+                  ADDRESS <span style={{ fontWeight: '400', color: '#94A3B8', fontSize: '12px' }}>(optional)</span>
+                </label>
+                <textarea
+                  className="form-input"
+                  placeholder="Door No., Street, Area, City..."
+                  rows={3}
+                  value={formData.address}
+                  onChange={e => setFormData({...formData, address: e.target.value})}
+                  style={{ border: '1px solid #E2E8F0', borderRadius: '8px', resize: 'none', padding: '12px 15px', fontSize: '15px', fontFamily: 'inherit', lineHeight: '1.5' }}
+                />
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label" style={{ fontWeight: '600', marginBottom: '8px', display: 'block', color: '#334155' }}>CONSULTING DOCTOR</label>
+                <select 
+                  className="form-input" required
+                  value={formData.doctorId} onChange={e => setFormData({...formData, doctorId: e.target.value})}
+                  style={{ height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px' }}
+                >
+                  <option value="">Select Doctor</option>
+                  {doctors.map((doc: any) => {
+                    const cleanName = doc.name.trim().replace(/^(dr\.?\s*)+/i, '');
+                    const displayName = `Dr. ${cleanName}`;
+                    return (
+                      <option key={doc.id} value={doc.id}>
+                        {displayName}{doc.specialization?.trim() ? ` (${doc.specialization.trim()})` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '20px', paddingTop: '30px', borderTop: '1px solid #F1F5F9' }}>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  style={{ background: '#0A4D68', color: 'white', padding: '15px 40px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', transition: '0.2s', boxShadow: '0 4px 15px rgba(10, 77, 104, 0.2)' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#083D52'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#0A4D68'}
+                >
+                  {loading ? 'Processing...' : 'Generate Token & Register'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {activeTab === 'queue' && (
+          <div className="glass-card animate-fade-in" style={{ width: '100%' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3>Today's Active Queue</h3>
+              <button className="btn btn-outline" style={{ fontSize: '12px' }} onClick={fetchQueue}>Refresh</button>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px' }}>Token</th>
+                  <th style={{ padding: '12px' }}>Patient</th>
+                  <th style={{ padding: '12px' }}>Doctor</th>
+                  <th style={{ padding: '12px' }}>Status</th>
+                  <th style={{ padding: '12px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queue.length > 0 ? queue.map((v: any) => (
+                  <tr key={v.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>#{v.tokenNumber}</td>
+                    <td style={{ padding: '12px' }}>
+                      <div style={{ fontWeight: 'bold' }}>{v.patient.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--primary)' }}>{v.patient.uhid}</div>
+                    </td>
+                    <td style={{ padding: '12px' }}>{v.doctor.name}</td>
+                    <td style={{ padding: '12px' }}>
+                      <span className={`badge ${
+                        v.status === 'REGISTERED' ? 'badge-warning' : 
+                        v.status === 'VITALS_DONE' ? 'badge-primary' :
+                        v.status === 'CONSULTING' ? 'badge-accent' : 'badge-success'
+                      }`}>
+                        {v.status === 'REGISTERED' && 'Wait: Nursing'}
+                        {v.status === 'VITALS_DONE' && 'Wait: Doctor'}
+                        {v.status === 'CONSULTING' && 'In Consultation'}
+                        {v.status === 'COMPLETED' && 'OPD Done'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <button 
+                        className="btn btn-outline" 
+                        style={{ padding: '5px 10px', fontSize: '12px' }}
+                        onClick={() => fetchHistory(v.patientId)}
+                        disabled={loading}
+                      >
+                        <i className="fa-solid fa-clock-rotate-left mr-1"></i> View History
+                      </button>
+                      
+                      {/* Hiding Surgery Bill button
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ padding: '5px 10px', fontSize: '12px', marginLeft: '5px' }}
+                        onClick={() => {
+                          setSurgeryForm({
+                            visitId: v.id,
+                            patientName: v.patient.name,
+                            items: [
+                              { itemName: 'Surgeon Fee', amount: 0 },
+                              { itemName: 'OT Charges', amount: 0 },
+                              { itemName: 'Anesthesia', amount: 0 }
+                            ]
+                          });
+                          setShowSurgeryModal(true);
+                        }}
+                      >
+                        + Surgery Bill
+                      </button>
+                      */}
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No patients in queue yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'billing' && (
+          <div className="glass-card animate-fade-in" style={{ width: '100%' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3>Billing Center</h3>
+              <button className="btn btn-outline" style={{ fontSize: '12px' }} onClick={fetchBills}>Refresh</button>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px' }}>Patient</th>
+                  <th style={{ padding: '12px' }}>Type</th>
+                  <th style={{ padding: '12px' }}>Items</th>
+                  <th style={{ padding: '12px' }}>Amount</th>
+                  <th style={{ padding: '12px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bills.length > 0 ? bills.map((b: any) => (
+                  <tr key={b.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px' }}>
+                       <strong>{b.visit.patient.name}</strong>
+                       <div style={{ fontSize: '11px', color: 'var(--primary)' }}>{b.visit.patient.uhid}</div>
+                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Token #{b.visit.tokenNumber}</div>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                       <span className="badge" style={{ background: b.type === 'LAB' ? '#e0f2fe' : '#fef3c7', color: b.type === 'LAB' ? '#0369a1' : '#92400e' }}>
+                          {b.type}
+                       </span>
+                    </td>
+                    <td style={{ padding: '12px', fontSize: '13px' }}>
+                       {b.type === 'LAB' && b.labOrders?.map((o: any) => o.testName).join(', ')}
+                       {b.type === 'SURGERY' && b.surgeryItemization && (
+                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                           {JSON.parse(b.surgeryItemization).map((i: any) => `${i.itemName} (₹${i.amount})`).join(', ')}
+                         </div>
+                       )}
+                       {b.type === 'PHARMACY' && 'Pharmacy Items'}
+                       {b.type === 'CONSULTATION' && 'Consultation Fee'}
+                    </td>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>₹{b.finalAmount}</td>
+                    <td style={{ padding: '12px' }}>
+                      <div className="flex gap-2">
+                        {b.paymentStatus === 'UNPAID' ? (
+                          <button 
+                            className="btn btn-primary" 
+                            style={{ padding: '5px 15px', fontSize: '11px' }} 
+                            onClick={() => { setSelectedBill(b); setBillingForm({...billingForm, discount: 0, waiverReason: ''}); setShowBillModal(true); }}
+                          >
+                            Collect Payment
+                          </button>
+                        ) : (
+                          <>
+                            <button 
+                              className="btn btn-outline" 
+                              style={{ padding: '5px 15px', fontSize: '11px' }} 
+                              onClick={() => window.open(b.type === 'LAB' ? `/dashboard/reception/lab-slip/${b.id}` : `/dashboard/reception/receipt/${b.id}`, '_blank')}
+                            >
+                              Print {b.type === 'LAB' ? 'Lab Slip' : 'Receipt'}
+                            </button>
+                            {b.paymentStatus === 'PAID' && (
+                              <button 
+                                className="btn btn-outline" 
+                                style={{ padding: '5px 15px', fontSize: '11px', borderColor: 'var(--danger)', color: 'var(--danger)' }} 
+                                onClick={() => { setSelectedBill(b); setBillingForm({...billingForm, discount: 0, waiverReason: ''}); setShowBillModal(true); }}
+                              >
+                                Refund
+                              </button>
+                            )}
+                          </>
+                        )}
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ padding: '5px 15px', fontSize: '11px' }} 
+                          onClick={() => window.open(`/dashboard/reception/final-bill/${b.visit.id}`, '_blank')}
+                        >
+                          <i className="fa-solid fa-file-invoice mr-1"></i> Full Visit Bill
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No bills found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'doctors' && (
+          <div className="glass-card animate-fade-in" style={{ width: '100%' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3>Available Doctors</h3>
+              <button className="btn btn-outline" style={{ fontSize: '12px' }} onClick={fetchDoctors}>Refresh</button>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px' }}>Doctor Name</th>
+                  <th style={{ padding: '12px' }}>Role</th>
+                  <th style={{ padding: '12px' }}>Email</th>
+                  <th style={{ padding: '12px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doctors.length > 0 ? doctors.map((doc: any) => (
+                  <tr key={doc.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{doc.name}</td>
+                    <td style={{ padding: '12px' }}>{doc.role}</td>
+                    <td style={{ padding: '12px' }}>{doc.email}</td>
+                    <td style={{ padding: '12px' }}>
+                       <span className="badge badge-success">Available</span>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      No doctors registered in the system.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )}
       </main>
-    </div>
-  );
-}
-
-function SidebarItem({ active, icon, label, onClick }: any) {
-  return (
-    <button 
-      onClick={onClick}
-      style={{ width: '100%', padding: '15px 30px', display: 'flex', alignItems: 'center', gap: '15px', background: active ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.3s' }}
-    >
-      <div style={{ opacity: active ? 1 : 0.4 }}>{icon}</div>
-      <span style={{ fontWeight: active ? '800' : '400', fontSize: '15px', letterSpacing: active ? '0.5px' : '0' }}>{label}</span>
-    </button>
-  );
-}
-
-function StatCard({ label, value, icon, trend, isPositive }: any) {
-  return (
-    <div className="glass-card !p-7 hover-scale-102 transition-all bg-white/80 !border-white">
-       <div className="flex justify-between items-start mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary shadow-tiny">
-            {icon}
-          </div>
-          {trend !== undefined && (
-            <div className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-              {isPositive ? '+' : '-'}{trend}%
-            </div>
-          )}
-       </div>
-       <div className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-1">{label}</div>
-       <div className="text-3xl font-black text-slate-800 tracking-tighter">{value}</div>
     </div>
   );
 }
