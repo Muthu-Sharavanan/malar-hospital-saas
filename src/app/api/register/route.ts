@@ -1,10 +1,13 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, phone, age, gender, address, doctorId, patientId, abhaId, consentGranted } = body;
+    const { name, phone, age, gender, address, doctorId, patientId, visitDate, reason, abhaId, consentGranted } = body;
 
     // 1. Check for EXACT duplicate (Name + Phone) if this is a manual entry (no patientId)
     if (!patientId) {
@@ -53,14 +56,18 @@ export async function POST(req: Request) {
       });
     }
 
-    // Calculate NEXT GLOBAL TOKEN for today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Calculate NEXT GLOBAL TOKEN for the specific visit date
+    const visitDateObj = visitDate ? new Date(visitDate) : new Date();
+    const tokenDateStart = new Date(visitDateObj);
+    tokenDateStart.setHours(0, 0, 0, 0);
+    const tokenDateEnd = new Date(visitDateObj);
+    tokenDateEnd.setHours(23, 59, 59, 999);
 
     const lastVisit = await prisma.visit.findFirst({
       where: {
         visitDate: {
-          gte: today
+          gte: tokenDateStart,
+          lte: tokenDateEnd
         }
       },
       orderBy: {
@@ -80,7 +87,9 @@ export async function POST(req: Request) {
         doctorId,
         assignedDoctorName,
         tokenNumber: nextToken,
-        status: 'REGISTERED'
+        visitDate: visitDateObj,
+        status: 'REGISTERED',
+        chiefComplaints: reason || null
       },
       include: {
         patient: true,
@@ -108,13 +117,16 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
     const visits = await prisma.visit.findMany({
       where: {
         visitDate: {
-          gte: today
+          gte: todayStart,
+          lte: todayEnd
         }
       },
       include: {
