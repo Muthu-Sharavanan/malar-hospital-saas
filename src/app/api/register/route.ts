@@ -1,13 +1,10 @@
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, phone, age, gender, address, doctorId, patientId, visitDate, reason } = body;
+    const { name, phone, age, gender, address, doctorId, patientId, abhaId, consentGranted } = body;
 
     // 1. Check for EXACT duplicate (Name + Phone) if this is a manual entry (no patientId)
     if (!patientId) {
@@ -33,7 +30,7 @@ export async function POST(req: Request) {
       // Use the selected patient
       patient = await prisma.patient.update({
         where: { id: patientId },
-        data: { name, age: parseInt(age), gender, address, phone }
+        data: { name, age: parseInt(age), gender, address, phone, abhaId: abhaId || null, consentGranted: Boolean(consentGranted), consentDate: consentGranted ? new Date() : null }
       });
     } else {
       isNewPatient = true;
@@ -52,22 +49,18 @@ export async function POST(req: Request) {
       
       const uhid = `MH-${nextUhidNum}`;
       patient = await prisma.patient.create({
-        data: { uhid, name, age: parseInt(age), gender, phone, address }
+        data: { uhid, name, age: parseInt(age), gender, phone, address, abhaId: abhaId || null, consentGranted: Boolean(consentGranted), consentDate: consentGranted ? new Date() : null }
       });
     }
 
-    // Calculate NEXT GLOBAL TOKEN for the specific visit date
-    const visitDateObj = visitDate ? new Date(visitDate) : new Date();
-    const tokenDateStart = new Date(visitDateObj);
-    tokenDateStart.setHours(0, 0, 0, 0);
-    const tokenDateEnd = new Date(visitDateObj);
-    tokenDateEnd.setHours(23, 59, 59, 999);
+    // Calculate NEXT GLOBAL TOKEN for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const lastVisit = await prisma.visit.findFirst({
       where: {
         visitDate: {
-          gte: tokenDateStart,
-          lte: tokenDateEnd
+          gte: today
         }
       },
       orderBy: {
@@ -87,9 +80,7 @@ export async function POST(req: Request) {
         doctorId,
         assignedDoctorName,
         tokenNumber: nextToken,
-        visitDate: visitDateObj,
-        status: 'REGISTERED',
-        chiefComplaints: reason || null
+        status: 'REGISTERED'
       },
       include: {
         patient: true,
@@ -117,16 +108,13 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const visits = await prisma.visit.findMany({
       where: {
         visitDate: {
-          gte: todayStart,
-          lte: todayEnd
+          gte: today
         }
       },
       include: {

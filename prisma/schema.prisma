@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -20,8 +20,6 @@ model User {
   updatedAt DateTime @updatedAt
   visitsConsulted Visit[] @relation("DoctorVisits")
   authorizedBills Bill[]  @relation("BillAuthorizer")
-  isAvailable   Boolean  @default(true)
-
 
   @@index([email])
 }
@@ -34,6 +32,13 @@ model Patient {
   age       Int
   gender    String
   address   String?
+  
+  // Compliance Fields
+  abhaId    String?  @unique
+  consentGranted Boolean @default(false)
+  consentDate    DateTime?
+  consentRevokedDate DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   visits    Visit[]
@@ -168,3 +173,16 @@ model Bill {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model AuditLog {
+  id              String   @id @default(cuid())
+  userId          String?
+  patientId       String?
+  action          String   // VIEWED, EXPORTED, MODIFIED, CONSENT_GRANTED, CONSENT_REVOKED
+  details         String?  // JSON string of specifics
+  createdAt       DateTime @default(now())
+
+  @@index([patientId])
+  @@index([userId])
+}
+

@@ -62,15 +62,13 @@ export async function GET(req: Request) {
         OR: [
           {
             assignedDoctorName: {
-              contains: sessionName,
-              mode: 'insensitive'
+              contains: sessionName
             }
           },
           {
             doctor: {
               name: {
-                contains: sessionName,
-                mode: 'insensitive'
+                contains: sessionName
               }
             }
           }
