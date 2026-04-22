@@ -110,7 +110,7 @@ export default function NursingDashboard() {
           <div className="flex items-center gap-4">
              <div style={{ textAlign: 'right' }}>
                 <div style={{ fontWeight: 600 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thanjavur</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Malar Hospital, Thoothukudi</div>
              </div>
           </div>
         </header>

@@ -38,7 +38,7 @@ export default function PrescriptionPrint() {
            </div>
         </div>
         <div style={{ textAlign: 'right', fontSize: '13px' }}>
-           <p style={{ margin: 0 }}>Opp. Railway Station, Thanjavur</p>
+           <p style={{ margin: 0 }}>Opp. Railway Station, Thoothukudi</p>
            <p style={{ margin: 0 }}>Tel: 04362-231234, 230987</p>
            <p style={{ margin: 0, fontWeight: 600 }}>Emergency: 9876543210</p>
         </div>

@@ -3,8 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import LogoutButton from '@/components/LogoutButton';
 import { 
   Users, 
+  IndianRupee, 
+  TrendingUp, 
   Activity, 
   Calendar, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  TrendingDown,
   LayoutDashboard,
   FileText,
   Settings,
@@ -15,13 +20,7 @@ import {
   UserSquare2,
   X,
   Clock,
-  Stethoscope,
-  Trash2,
-  CheckCircle,
-  FlaskConical,
-  ArrowUpRight,
-  ArrowDownRight,
-  TrendingDown
+  Stethoscope
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -59,29 +58,6 @@ export default function AdminDashboard() {
   const [historyPatient, setHistoryPatient] = useState<any>(null);
   const [historyVisits, setHistoryVisits] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-
-  // Secure Password Modal State
-  const [passwordModal, setPasswordModal] = useState<{ isOpen: boolean, type: 'SINGLE' | 'ALL' | null, patientId?: string, patientName?: string }>({ isOpen: false, type: null });
-  const [passwordInput, setPasswordInput] = useState('');
-
-  const handleLiveReset = async () => {
-    if (!confirm("⚠️ LIVE RESET: This will clear all test data and prepare professional demo patients. Continue?")) return;
-    setLoading(true);
-    try {
-      const res = await fetch('/api/seed');
-      const data = await res.json();
-      if (data.success) {
-        alert("✅ RESET SUCCESSFUL! Redirecting to login...");
-        window.location.href = '/';
-      } else {
-        alert("Reset failed: " + data.error);
-      }
-    } catch (err) {
-      alert("Reset failed: " + err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchStats = async () => {
     try {
@@ -123,46 +99,7 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const handleDeletePatient = (patientId: string, patientName: string) => {
-    setPasswordModal({ isOpen: true, type: 'SINGLE', patientId, patientName });
-    setPasswordInput('');
-  };
-
-  const handleDeleteAllPatients = () => {
-    setPasswordModal({ isOpen: true, type: 'ALL' });
-    setPasswordInput('');
-  };
-
-  const confirmDelete = async () => {
-    if (!passwordInput) return;
-    setPatientLoading(true);
-    setPasswordModal({ isOpen: false, type: null });
-    
-    try {
-      const isAll = passwordModal.type === 'ALL';
-      const endpoint = isAll ? '/api/patients/delete-all' : `/api/patients/${passwordModal.patientId}`;
-      const res = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordInput })
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(isAll ? "All patients entirely deleted." : `Patient ${passwordModal.patientName} entirely deleted.`);
-        fetchPatientRecords(isAll ? 1 : patientPage, isAll ? '' : patientSearch);
-      } else {
-        alert("Delete failed: " + data.error);
-      }
-    } catch (err) {
-      alert("Delete failed: " + err);
-    } finally {
-      setPatientLoading(false);
-      setPasswordInput('');
-    }
-  };
-
   const fetchPatientHistory = async (patient: any) => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     setHistoryPatient(patient);
     setShowHistoryModal(true);
     setHistoryLoading(true);
@@ -220,7 +157,13 @@ export default function AdminDashboard() {
 
   const COLORS = ['#0A4D68', '#088395', '#16698b', '#05bfdb'];
 
-  // --- CLINICAL PERFORMANCE ANALYTICS ---
+  // Calculate Growth Percentage
+  const calculateGrowth = (current: number, previous: number) => {
+    if (previous === 0) return 0;
+    return (((current - previous) / previous) * 100).toFixed(1);
+  };
+
+  const revenueGrowth = calculateGrowth(stats?.totalCollection || 0, stats?.yesterdayCollection || 0);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F2F5' }}>
@@ -315,130 +258,65 @@ export default function AdminDashboard() {
         {activeView === 'performance' ? (
           <>
             {/* KPI Cards Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '40px' }}>
+            <div className="responsive-grid responsive-grid-2 lg:grid-cols-4 gap-6 mb-10">
+              {/* Hiding Revenue Card
               <StatCard 
-                  label="New Registrations (Today)" 
+                  label="Today's Revenue" 
+                  value={`₹${stats?.totalCollection?.toLocaleString() || 0}`} 
+                  icon={<IndianRupee className="text-primary" />} 
+                  trend={revenueGrowth} 
+                  isPositive={parseFloat(revenueGrowth as string) >= 0}
+              />
+              */}
+              <StatCard 
+                  label="Patient Registrations" 
                   value={stats?.totalPatients || 0} 
-                  icon={<Users className="text-secondary" style={{ color: '#0A4D68' }} />} 
+                  icon={<Users className="text-secondary" />} 
                   trend={stats?.totalPatientsMonth || 0}
                   trendLabel="this month"
               />
+              {/* Hiding financial collection cards
               <StatCard 
-                  label="Active Today" 
-                  value={stats?.activeToday || 0} 
-                  icon={<Activity style={{ color: '#14B8A6' }} />} 
-                  trend="+12%"
-                  isPositive={true}
+                  label="Monthly Collection" 
+                  value={`₹${stats?.monthlyCollection?.toLocaleString() || 0}`} 
+                  icon={<TrendingUp className="text-success" />} 
               />
               <StatCard 
-                  label="Completed Consultations" 
-                  value={stats?.completedCount || 0} 
-                  icon={<CheckCircle style={{ color: '#059669' }} />} 
+                  label="Avg. Bill Value" 
+                  value={`₹${stats?.totalPatients > 0 ? (stats.totalCollection / stats.totalPatients).toFixed(0) : 0}`} 
+                  icon={<Activity className="text-accent" />} 
               />
-              <StatCard 
-                  label="Pending Lab Reports" 
-                  value={stats?.pendingLabs || 0} 
-                  icon={<FlaskConical style={{ color: '#D97706' }} />} 
-              />
+              */}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', marginBottom: '40px', alignItems: 'stretch' }}>
-              <div className="glass-card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ padding: '24px', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(248, 250, 252, 0.5)' }}>
-                  <div>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>7-Day Patient Traffic</h4>
-                    <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>Daily registration volume vs previous period</p>
-                  </div>
-                </div>
-                <div style={{ flex: '1', height: '300px', width: '100%', padding: '16px' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={stats?.sevenDayTrend || []}>
-                      <defs>
-                        <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
-                      <Tooltip 
-                        contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px'}}
-                      />
-                      <Area type="monotone" dataKey="count" stroke="#14B8A6" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+            {/* Hiding Financial Charts Row
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+              <div className="lg:col-span-2 glass-card overflow-hidden !p-0">
+                ...
               </div>
-              
-              <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>Visit Distribution</h4>
-                <div style={{ flex: '1', height: '250px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(stats?.visitBreakdown || {}).map(([name, value]) => ({ name, value }))}
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {Object.entries(stats?.visitBreakdown || {}).map((entry, index) => (
-                           <Cell key={`cell-${index}`} fill={['#0A4D68', '#14B8A6', '#0891B2', '#1E293B'][index % 4]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                   {Object.entries(stats?.visitBreakdown || {}).map(([name, value]: [string, any], idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: ['#0A4D68', '#14B8A6', '#0891B2', '#1E293B'][idx % 4] }}></span>
-                            <span style={{ color: '#64748B', fontWeight: '500' }}>{name}</span>
-                         </span>
-                         <span style={{ fontWeight: 'bold', color: '#334155' }}>{value} visits</span>
-                      </div>
-                   ))}
-                </div>
+              <div className="glass-card flex ...">
+                ... 
               </div>
             </div>
+            */}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px', alignItems: 'stretch' }}>
-              <div className="glass-card" style={{ flex: '1' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                    <div>
-                      <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Clinical Activity</h4>
-                      <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px' }}>Live patient flow and status updates</p>
-                    </div>
-                    <button style={{ fontSize: '12px', fontWeight: 'bold', color: '#14B8A6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
-                  </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ textAlign: 'left', fontSize: '10px', fontWeight: 'bold', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #F1F5F9' }}>
-                          <th style={{ paddingBottom: '12px' }}>Patient</th>
-                          <th style={{ paddingBottom: '12px' }}>UHID</th>
-                          <th style={{ paddingBottom: '12px', textAlign: 'right' }}>Time</th>
-                        </tr>
-                      </thead>
-                      <tbody style={{ fontSize: '12px' }}>
-                        {patientList.slice(0, 5).map((p: any) => (
-                          <tr key={p.id} style={{ borderBottom: '1px solid #F8FAFC' }}>
-                            <td style={{ padding: '12px 0', fontWeight: 'bold', color: '#334155' }}>{p.name}</td>
-                            <td style={{ padding: '12px 0', color: '#64748B' }}>{p.uhid}</td>
-                            <td style={{ padding: '12px 0', textAlign: 'right', color: '#94A3B8' }}>{new Date(p.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Hiding Transaction Stream
+              <div className="lg:col-span-2 glass-card">
+                  ...
               </div>
+              */}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div className="glass-card" style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center' }}>
-                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', color: '#1E293B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Efficiency Metrics</h4>
+              {/* Quick Actions / Summary */}
+              <div className="flex flex-col gap-6">
+                  {/* Hiding Weekly Goal Revenue Card
+                  <div className="glass-card bg-primary text-white overflow-hidden relative">
+                    ...
+                  </div>
+                  */}
+
+                  <div className="glass-card flex flex-col gap-4">
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest">Efficiency Metrics</h4>
                     <MetricRow label="Consultation Rate" value="92%" isUp={true} />
                     <MetricRow label="Lab Conversion" value="65%" isUp={false} />
                     <MetricRow label="Wait Time avg." value="14m" isUp={true} />
@@ -506,27 +384,18 @@ export default function AdminDashboard() {
                 <h3 className="text-xl font-bold text-slate-800">All Registered Patients</h3>
                 <p className="text-xs text-slate-400 mt-1">{patientTotal} patients in the system</p>
               </div>
-              <div className="flex items-start gap-3 w-full sm:w-auto">
-                <div className="relative w-full sm:w-72" style={{ height: '40px' }}>
-                  <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                  <input
-                    type="text"
-                    placeholder="Search name, phone, UHID..."
-                    value={patientSearch}
-                    onChange={e => {
-                      setPatientSearch(e.target.value);
-                      fetchPatientRecords(1, e.target.value);
-                    }}
-                    style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B', margin: 0 }}
-                  />
-                </div>
-                <button 
-                  onClick={handleDeleteAllPatients} 
-                  style={{ background: '#FEE2E2', color: '#EF4444', padding: '0', margin: '0', borderRadius: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '40px', width: '40px', flexShrink: 0 }}
-                  title="Delete All Patients (Requires Password)"
-                >
-                  <Trash2 size={18} />
-                </button>
+              <div className="relative w-full sm:w-72">
+                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <input
+                  type="text"
+                  placeholder="Search name, phone, UHID..."
+                  value={patientSearch}
+                  onChange={e => {
+                    setPatientSearch(e.target.value);
+                    fetchPatientRecords(1, e.target.value);
+                  }}
+                  style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', height: '40px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', color: '#1E293B' }}
+                />
               </div>
             </div>
 
@@ -588,16 +457,7 @@ export default function AdminDashboard() {
                         {new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="py-3 px-3">
-                        <div className="flex items-center gap-3">
-                          <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>View →</span>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleDeletePatient(p.id, p.name); }} 
-                            style={{ background: '#FEE2E2', color: '#EF4444', padding: '6px', borderRadius: '6px', border: 'none', cursor: 'pointer', display: 'flex' }}
-                            title="Delete Patient Entirely"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '500' }}>View →</span>
                       </td>
                     </tr>
                   ))}
@@ -738,52 +598,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Password Security Modal ── */}
-      {passwordModal.isOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', borderRadius: '16px', width: '400px', textAlign: 'center', padding: '30px', boxShadow: '0 25px 60px rgba(0,0,0,0.2)' }} className="animate-fade-in">
-            <div style={{ color: '#EF4444', marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-              <Trash2 size={48} />
-            </div>
-            <h2 style={{ marginBottom: '10px', fontSize: '24px', fontWeight: 'bold', color: '#0F172A' }}>Security Verification</h2>
-            <p style={{ color: '#64748B', marginBottom: '25px', fontSize: '14px' }}>
-              {passwordModal.type === 'ALL' 
-                ? 'You are about to permanently delete ALL patients and their associated records. This action cannot be undone.'
-                : `You are about to permanently delete patient ${passwordModal.patientName} and all associated records. This action cannot be undone.`
-              }
-            </p>
-            
-            <div style={{ marginBottom: '24px', textAlign: 'left' }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '14px', color: '#334155' }}>Enter Master Password</label>
-              <input 
-                type="password" 
-                placeholder="••••••••" 
-                autoFocus
-                value={passwordInput}
-                onChange={e => setPasswordInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') confirmDelete(); }}
-                style={{ width: '100%', height: '50px', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '0 15px', fontSize: '16px', outline: 'none' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '15px' }}>
-              <button 
-                onClick={() => { setPasswordModal({ isOpen: false, type: null }); setPasswordInput(''); }}
-                style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid #E2E8F0', borderRadius: '8px', color: '#64748B', fontWeight: 'bold', cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={confirmDelete}
-                style={{ flex: 1, padding: '12px', background: '#EF4444', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
-              >
-                Confirm Delete
-              </button>
             </div>
           </div>
         </div>

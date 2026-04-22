@@ -2,9 +2,6 @@ import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -50,14 +47,7 @@ export async function POST(req: Request) {
     }
 
     // Set a simple cookie (In a production app, use JWT and iron-session)
-    let displayName = customName || user.name;
-    
-    // ENSURE CORRECT DOCTOR NAMES FOR DEMO
-    if (user.role === 'DOCTOR') {
-      if (email.includes('ramaswamy')) displayName = 'Ramaswamy';
-      else if (email.includes('aravind')) displayName = 'Aravind';
-    }
-
+    const displayName = customName || user.name;
     const sessionData = JSON.stringify({ id: user.id, role: user.role, name: displayName });
     (await cookies()).set('session', sessionData, {
       httpOnly: true,

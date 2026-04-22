@@ -33,7 +33,7 @@ export default function ReceiptPrint() {
         <p style={{ margin: 0, fontSize: '14px' }}>Opp. Railway Station, Thoothukudi</p>
         <p style={{ margin: 0, fontSize: '14px' }}>Phone: 04362-231234</p>
         <div style={{ margin: '15px 0', borderBottom: '2px solid #0A4D68' }}></div>
-        <h3 style={{ margin: 0, textDecoration: 'underline' }}>PAYMENT RECEIPT</h3>
+        <h3 style={{ margin: 0, textDecoration: 'underline' }}>VISIT SLIP / CLINICAL SUMMARY</h3>
       </div>
 
       {/* Details */}
@@ -56,42 +56,12 @@ export default function ReceiptPrint() {
       </div>
 
       {/* Amount Table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '40px' }}>
-         <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #000' }}>
-               <th style={{ textAlign: 'left', padding: '10px' }}>Description</th>
-               <th style={{ textAlign: 'right', padding: '10px' }}>Amount (₹)</th>
-            </tr>
-         </thead>
-         <tbody>
-            <tr>
-               <td style={{ padding: '10px' }}>{bill.type === 'CONSULTATION' ? 'Doctor Consultation Fee' : bill.type + ' Charges'}</td>
-               <td style={{ textAlign: 'right', padding: '10px' }}>{bill.amount.toFixed(2)}</td>
-            </tr>
-            {bill.discount > 0 && (
-               <tr>
-                  <td style={{ padding: '10px', fontStyle: 'italic' }}>Discount / Waiver ({bill.waiverReason})</td>
-                  <td style={{ textAlign: 'right', padding: '10px', color: '#dc2626' }}>- {bill.discount.toFixed(2)}</td>
-               </tr>
-            )}
-            <tr style={{ borderTop: '2px solid #000', fontWeight: 'bold' }}>
-               <td style={{ padding: '10px' }}>TOTAL PAID</td>
-               <td style={{ textAlign: 'right', padding: '10px' }}>₹{bill.finalAmount.toFixed(2)}</td>
-            </tr>
-            {bill.paymentStatus === 'REFUNDED' && (
-               <>
-                  <tr>
-                     <td style={{ padding: '10px', fontStyle: 'italic' }}>Refund Issued ({bill.refundReason})</td>
-                     <td style={{ textAlign: 'right', padding: '10px', color: '#dc2626' }}>- {bill.refundAmount.toFixed(2)}</td>
-                  </tr>
-                  <tr style={{ borderTop: '2px solid #000', fontWeight: 'bold' }}>
-                     <td style={{ padding: '10px' }}>NET PAID</td>
-                     <td style={{ textAlign: 'right', padding: '10px' }}>₹{(bill.finalAmount - bill.refundAmount).toFixed(2)}</td>
-                  </tr>
-               </>
-            )}
-         </tbody>
-      </table>
+      <div style={{ padding: '20px', border: '1px solid #eee', borderRadius: '8px', marginBottom: '40px' }}>
+         <p style={{ fontWeight: 'bold', marginBottom: '10px' }}>Clinical Details:</p>
+         <p>Towards <strong>{bill.type}</strong> consultation/services.</p>
+         <p>Consulting Doctor: <strong>{bill.visit.doctor.name}</strong></p>
+         <p style={{ marginTop: '20px', fontSize: '13px', color: '#64748B' }}>* Please proceed to the clinical area for further assessment.</p>
+      </div>
 
       {/* Footer */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '60px' }}>
@@ -111,7 +81,7 @@ export default function ReceiptPrint() {
         }
       `}</style>
       <div className="no-print" style={{ textAlign: 'center', marginTop: '30px' }}>
-         <button className="btn btn-primary" onClick={() => window.print()}>Print Receipt</button>
+         <button className="btn btn-primary" onClick={() => window.print()}>Print Visit Slip</button>
       </div>
     </div>
   );
