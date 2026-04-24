@@ -2,29 +2,7 @@
 import { useState, useEffect } from 'react';
 import LogoutButton from '@/components/LogoutButton';
 import { 
-  Users, 
-  UserPlus, 
-  CalendarCheck, 
-  UserRoundCheck, 
-  Stethoscope, 
-  Search, 
-  Phone, 
-  MapPin, 
-  Clock, 
-  Calendar,
-  CheckCircle2,
-  AlertCircle,
-  Bell,
-  Trash2,
-  Printer,
-  History,
-  LayoutDashboard,
-  TrendingUp,
-  Activity,
-  ChevronRight,
-  X,
-  CreditCard,
-  FileText
+  Users, UserPlus, CalendarCheck, UserRoundCheck, Stethoscope, Search, Phone, MapPin, Clock, Calendar, CheckCircle2, AlertCircle, Bell, Trash2, Printer, History, LayoutDashboard, TrendingUp, Activity, ChevronRight, X, CreditCard, FileText
 } from 'lucide-react';
 
 export default function ReceptionDashboard() {
@@ -80,7 +58,15 @@ export default function ReceptionDashboard() {
     try {
       const res = await fetch(`/api/register?session=${sessionFilter}`);
       const data = await res.json();
-      if (data.success) setQueue(data.visits || data.queue || []);
+      if (data.success) {
+        // STRICT LOCAL FILTER FOR TODAY'S QUEUE
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todaysVisits = (data.visits || []).filter((v: any) => {
+          const vDate = new Date(v.visitDate).toISOString().split('T')[0];
+          return vDate === todayStr;
+        });
+        setQueue(todaysVisits);
+      }
     } catch (err) {}
   };
 
@@ -202,19 +188,6 @@ export default function ReceptionDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        const selectedDoc = doctors.find((d: any) => d.id === formData.doctorId);
-        const docName = selectedDoc ? selectedDoc.name.replace(/^(dr\.?\s*)+/i, '') : 'Consultant';
-        const formattedDate = new Date(formData.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-        const appointmentTime = formData.visitTime ? ` at ${formData.visitTime}` : '';
-
-        const realWaMessage = formData.visitDate 
-          ? `*APPOINTMENT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Date:* ${formattedDate}${appointmentTime}\n*Doctor:* Dr. ${docName}\n*Token:* #${data.visit.tokenNumber}`
-          : `*VISIT CONFIRMATION*\n\n*Name:* ${formData.name}\n*Age:* ${formData.age}Y\n*UHID:* ${data.uhid}\n*Doctor:* Dr. ${docName}\n*Token:* #${data.visit.tokenNumber}\n*Status:* Confirmed for Today.`;
-
-        if (formData.phone && formData.visitDate) {
-          // In a real scenario, this would be a server-side trigger, but we open WA Web here.
-        }
-
         setSuccessInfo({
           title: data.isNewPatient ? "New Patient Registered!" : "Registration Successful!",
           message: data.isNewPatient ? `Permanent ID created for ${formData.name}.` : `${formData.name} added to queue.`,
@@ -224,8 +197,15 @@ export default function ReceptionDashboard() {
         });
         setShowSuccessModal(true);
         clearPatient();
-        if (formData.visitDate) { setActiveTab('future'); fetchFutureQueue(); } 
-        else { setActiveTab('queue'); fetchQueue(); }
+        
+        // AUTO REDIRECT BASED ON DATE
+        if (formData.visitDate) { 
+          setActiveTab('future'); 
+          fetchFutureQueue(); 
+        } else { 
+          setActiveTab('queue'); 
+          fetchQueue(); 
+        }
       } else if (res.status === 409) {
         setDuplicateInfo({ name: formData.name, uhid: data.uhid });
         setShowDuplicateModal(true);
@@ -326,13 +306,13 @@ export default function ReceptionDashboard() {
         {/* Dynamic Content */}
         <div className="animate-fade-in">
           {activeTab === 'register' && (
-            <div className="glass-card !p-10 !border-2 !border-white shadow-xl bg-white/70">
+            <div className="glass-card !p-10 !border-2 !border-white shadow-xl bg-white/70 rounded-[32px]">
               <div className="flex justify-between items-center mb-10">
                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">Patient Encounter Info</h2>
                 <div className="relative w-80 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-all" size={20} />
                   <input 
-                    type="text" className="form-input !pl-12 !h-12 !bg-slate-50 border-none group-focus-within:!bg-white group-focus-within:!ring-2" 
+                    type="text" className="w-full p-4 pl-12 bg-slate-50 border-none rounded-2xl font-bold focus:ring-2 focus:ring-[#0A4D68]/20" 
                     placeholder="Search UHID / Phone / Name..." value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); fetchPatients(e.target.value); }}
                     onBlur={() => setTimeout(() => setShowSearchResults(false), 300)}
@@ -370,84 +350,77 @@ export default function ReceptionDashboard() {
                       </div>
                    </div>
                    <div className="flex gap-3">
-                      <button className="btn btn-outline h-11 px-5 border-emerald-600 text-emerald-600 bg-white" onClick={() => fetchHistory(selectedPatient.id)}><History size={16} className="mr-2" /> Medical History</button>
-                      <button className="btn h-11 w-11 !p-0 bg-rose-100 text-rose-600 border-none" onClick={clearPatient}><Trash2 size={18} /></button>
+                      <button className="flex items-center gap-2 px-5 py-3 border-2 border-emerald-600 text-emerald-600 bg-white rounded-xl font-bold" onClick={() => fetchHistory(selectedPatient.id)}><History size={16} /> Medical History</button>
+                      <button className="flex items-center justify-center w-12 h-12 bg-rose-100 text-rose-600 rounded-xl" onClick={clearPatient}><Trash2 size={18} /></button>
                    </div>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                <div className="form-group">
+                <div className="flex flex-col">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Patient Full Name</label>
-                  <input type="text" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="Enter name as per Aadhaar" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.toUpperCase()})} />
+                  <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" placeholder="Enter name as per Aadhaar" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value.toUpperCase()})} />
                 </div>
-                <div className="form-group">
+                <div className="flex flex-col">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Mobile Number <span className={formData.phone.length === 10 ? 'text-emerald-500' : 'text-rose-500'}>({formData.phone.length}/10)</span></label>
-                  <input type="tel" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="Patient contact" maxLength={10} required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})} />
+                  <input type="tel" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" placeholder="Patient contact" maxLength={10} required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})} />
                 </div>
-                <div className="form-group grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Age</label>
-                    <input type="number" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="Years" required value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} />
+                    <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" placeholder="Years" required value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} />
                   </div>
                   <div>
                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Gender</label>
-                    <select className="form-input !bg-slate-50 !h-14 font-bold border-none" required value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
-                      <option>Male</option>
-                      <option>Female</option>
-                      <option>Other</option>
+                    <select className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold appearance-none" required value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
+                      <option>Male</option><option>Female</option><option>Other</option>
                     </select>
                   </div>
                 </div>
-                <div className="form-group">
+                <div className="flex flex-col">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Consulting Specialist</label>
-                  <select className="form-input !bg-slate-50 !h-14 font-bold border-none" required value={formData.doctorId} onChange={e => setFormData({...formData, doctorId: e.target.value})}>
+                  <select className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" required value={formData.doctorId} onChange={e => setFormData({...formData, doctorId: e.target.value})}>
                     <option value="">Choose Doctor</option>
                     {doctors.map(d => <option key={d.id} value={d.id}>{d.name.startsWith('Dr') ? d.name : `Dr. ${d.name}`} {d.specialization ? `(${d.specialization})` : ''}</option>)}
                   </select>
                 </div>
-                <div className="form-group">
+                <div className="flex flex-col">
                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Appointment Date (Optional)</label>
-                   <input type="date" className="form-input !bg-slate-50 !h-14 font-bold border-none" min={new Date().toISOString().split('T')[0]} value={formData.visitDate} onChange={e => setFormData({...formData, visitDate: e.target.value})} />
+                   <input type="date" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" min={new Date().toISOString().split('T')[0]} value={formData.visitDate} onChange={e => setFormData({...formData, visitDate: e.target.value})} />
                 </div>
                 {formData.visitDate && (
-                  <div className="form-group animate-in slide-in-from-right-4">
+                  <div className="flex flex-col animate-in slide-in-from-right-4">
                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">TimeSlot</label>
-                    <input type="time" className="form-input !bg-slate-50 !h-14 font-bold border-none" required value={formData.visitTime} onChange={e => setFormData({...formData, visitTime: e.target.value})} />
+                    <input type="time" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" required value={formData.visitTime} onChange={e => setFormData({...formData, visitTime: e.target.value})} />
                   </div>
                 )}
-                <div className="form-group">
+                <div className="flex flex-col">
                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">ABHA ID (Optional)</label>
-                   <input type="text" className="form-input !bg-slate-50 !h-14 font-bold border-none" placeholder="14-digit ABHA" value={formData.abhaId} onChange={e => setFormData({...formData, abhaId: e.target.value})} />
+                   <input type="text" className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold" placeholder="14-digit ABHA" value={formData.abhaId} onChange={e => setFormData({...formData, abhaId: e.target.value})} />
                 </div>
-                <div className="form-group flex justify-start items-center">
+                <div className="flex justify-start items-center p-4">
                    <label className="flex items-center gap-3 cursor-pointer">
-                     <input type="checkbox" className="w-6 h-6 rounded-md border-emerald-500 text-emerald-500 focus:ring-emerald-500 bg-slate-50" checked={formData.consentGranted} onChange={e => setFormData({...formData, consentGranted: e.target.checked})} />
-                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-tight mt-1">Patient explicit consent granted<br/>for records data processing</span>
+                     <input type="checkbox" className="w-6 h-6 rounded-md border-emerald-500 text-emerald-500 focus:ring-emerald-500" checked={formData.consentGranted} onChange={e => setFormData({...formData, consentGranted: e.target.checked})} />
+                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-tight">Patient explicit consent granted<br/>for records data processing</span>
                    </label>
                 </div>
-                <div className="form-group md:col-span-2">
+                <div className="md:col-span-2">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Residential Address</label>
-                  <textarea className="form-input !bg-slate-50 !h-20 font-bold border-none py-4" placeholder="Full address for system records..." value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                  <textarea className="w-full p-4 bg-slate-50 border-none rounded-2xl font-bold h-20" placeholder="Full address for system records..." value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
                 </div>
                 <div className="md:col-span-2 flex justify-end mt-4">
-                  <button type="submit" disabled={loading} className="btn btn-primary !h-16 !px-12 !rounded-2xl shadow-xl shadow-primary/20 text-lg font-black tracking-tight">{loading ? 'Processing Transaction...' : 'Generate Clinical Token'}</button>
+                  <button type="submit" disabled={loading} className="px-12 py-5 bg-[#0A4D68] text-white rounded-2xl shadow-xl shadow-[#0A4D68]/20 text-lg font-black tracking-tight">{loading ? 'Processing...' : 'Generate Clinical Token'}</button>
                 </div>
               </form>
             </div>
           )}
 
           {activeTab === 'queue' && (
-            <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white">
+            <div className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 animate-in fade-in duration-500">
               <div className="flex justify-between items-center mb-10">
                 <h2 className="text-2xl font-black text-slate-800">Operational OPD Queue</h2>
-                <div className="flex items-center gap-6">
-                  <div style={{ background: '#F8FAFC', padding: '10px 18px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', color: '#0A4D68', border: '1px solid #E2E8F0' }}>
-                    Active Queue List
-                  </div>
-                  <div style={{ background: '#F8FAFC', padding: '10px 18px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', color: '#0A4D68', border: '1px solid #E2E8F0' }}>
-                    Total {queue.length} Patients
-                  </div>
+                <div style={{ background: '#F8FAFC', padding: '10px 18px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', color: '#0A4D68', border: '1px solid #E2E8F0' }}>
+                   Total {queue.length} Active Patients
                 </div>
               </div>
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px' }}>
@@ -462,9 +435,9 @@ export default function ReceptionDashboard() {
                 </thead>
                 <tbody>
                   {queue.length > 0 ? queue.map((v) => (
-                    <tr key={v.id} className="group hover-scale-101 transition-all">
+                    <tr key={v.id} className="group hover:scale-101 transition-all">
                       <td className="p-4 bg-slate-50 rounded-l-2xl border-y border-l border-slate-100">
-                        <div className="font-black text-primary text-base">#{v.tokenNumber}</div>
+                        <div className="font-black text-[#0A4D68] text-base">#{v.tokenNumber}</div>
                         <div className="text-[10px] font-bold text-slate-400 mt-0.5">{v.patient.uhid}</div>
                       </td>
                       <td className="p-4 bg-slate-50 border-y border-slate-100">
@@ -477,13 +450,10 @@ export default function ReceptionDashboard() {
                         </span>
                       </td>
                       <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <div className="flex items-center gap-2">
-                           <div className="w-6 h-6 rounded-full bg-slate-200 text-[10px] flex items-center justify-center font-black">DR</div>
-                           <span className="text-xs font-bold text-slate-600">Dr. {v.doctor?.name.replace(/^(dr\.?\s*)+/i, '') || 'Consultant'}</span>
-                        </div>
+                        <div className="text-xs font-bold text-slate-600">Dr. {v.doctor?.name}</div>
                       </td>
                       <td className="p-4 bg-slate-50 rounded-r-2xl border-y border-r border-slate-100 text-right">
-                         <button className="btn btn-outline h-9 px-4 text-[10px]" onClick={() => fetchHistory(v.patientId)}>History</button>
+                         <button className="px-4 py-2 border border-slate-200 text-slate-400 rounded-lg text-[10px] font-black hover:bg-slate-100 transition" onClick={() => fetchHistory(v.patientId)}>History</button>
                       </td>
                     </tr>
                   )) : (
@@ -495,7 +465,7 @@ export default function ReceptionDashboard() {
           )}
 
           {activeTab === 'future' && (
-            <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white">
+            <div className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 animate-in fade-in duration-500">
               <div className="flex justify-between items-center mb-10">
                 <h2 className="text-2xl font-black text-slate-800">Advanced Appointments</h2>
                 <div style={{ background: '#F8FAFC', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', color: '#0A4D68' }}>Total {futureQueue.length} Bookings</div>
@@ -511,20 +481,20 @@ export default function ReceptionDashboard() {
                 </thead>
                 <tbody>
                   {futureQueue.length > 0 ? futureQueue.map((v) => (
-                    <tr key={v.id} className="group hover-scale-101 transition-all">
+                    <tr key={v.id} className="group hover:scale-101 transition-all">
                       <td className="p-4 bg-slate-50 rounded-l-2xl border-y border-l border-slate-100">
                         <div className="font-black text-slate-800 text-sm">{new Date(v.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
-                        <div className="text-[10px] font-bold text-primary mt-0.5">{v.visitTime || 'TBD'}</div>
+                        <div className="text-[10px] font-bold text-blue-600 mt-0.5">{v.visitTime || 'TBD'}</div>
                       </td>
                       <td className="p-4 bg-slate-50 border-y border-slate-100">
                         <div className="font-bold text-slate-800">{v.patient.name}</div>
-                        <div className="text-[10px] text-slate-400 font-bold">{v.chiefComplaints || 'General Checkup'}</div>
+                        <div className="text-[10px] text-slate-400 font-bold">TOKEN #{v.tokenNumber}</div>
                       </td>
                       <td className="p-4 bg-slate-50 border-y border-slate-100">
-                        <div className="text-xs font-bold text-slate-600">Dr. {v.doctor?.name.replace(/^(dr\.?\s*)+/i, '') || 'Consultant'}</div>
+                        <div className="text-xs font-bold text-slate-600">Dr. {v.doctor?.name}</div>
                       </td>
                       <td className="p-4 bg-slate-50 rounded-r-2xl border-y border-r border-slate-100 text-right">
-                         <button className="btn btn-primary h-9 px-4 text-[10px] !bg-emerald-500 !shadow-none" onClick={() => {
+                         <button className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-[10px] font-black shadow-md shadow-emerald-100" onClick={() => {
                             const msg = `Reminder: Appointment for ${v.patient.name} on ${new Date(v.visitDate).toLocaleDateString()} with Dr. ${v.doctor.name} at Malar Hospital.`;
                             window.open(`https://web.whatsapp.com/send?phone=91${v.patient.phone}&text=${encodeURIComponent(msg)}`, '_blank');
                          }}>Remind</button>
@@ -539,7 +509,7 @@ export default function ReceptionDashboard() {
           )}
 
           {activeTab === 'billing' && (
-            <div className="glass-card !p-8 animate-fade-in bg-white border-2 border-white">
+            <div className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 animate-in fade-in duration-500">
               <div className="flex justify-between items-center mb-10">
                 <h2 className="text-2xl font-black text-slate-800">Financial Clearance Center</h2>
                 <div style={{ background: '#F8FAFC', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', color: '#0A4D68' }}>Total {bills.length} Records</div>
@@ -556,7 +526,7 @@ export default function ReceptionDashboard() {
                 </thead>
                 <tbody>
                   {bills.length > 0 ? bills.map((b) => (
-                    <tr key={b.id} className="group hover-scale-101 transition-all">
+                    <tr key={b.id} className="group hover:scale-101 transition-all">
                       <td className="p-4 bg-slate-50 rounded-l-2xl border-y border-l border-slate-100">
                         <div className="font-bold text-slate-800">{b.visit.patient.name}</div>
                         <div className="text-[10px] text-slate-400 font-bold">UHID: {b.visit.patient.uhid}</div>
@@ -573,9 +543,9 @@ export default function ReceptionDashboard() {
                       <td className="p-4 bg-slate-50 rounded-r-2xl border-y border-r border-slate-100 text-right">
                          <div className="flex justify-end gap-2">
                             {b.paymentStatus === 'UNPAID' ? (
-                               <button className="btn btn-primary h-9 px-4 text-[10px]" onClick={() => { setSelectedBill(b); setShowBillModal(true); }}>Collect</button>
+                               <button className="px-4 py-2 bg-[#0A4D68] text-white rounded-lg text-[10px] font-black" onClick={() => { setSelectedBill(b); setShowBillModal(true); }}>Collect</button>
                             ) : (
-                               <button className="btn btn-outline h-9 px-4 text-[10px]" onClick={() => window.open(`/dashboard/reception/receipt/${b.id}`, '_blank')}>Print</button>
+                               <button className="px-4 py-2 border border-slate-200 text-slate-400 rounded-lg text-[10px] font-black" onClick={() => window.open(`/dashboard/reception/receipt/${b.id}`, '_blank')}>Print</button>
                             )}
                          </div>
                       </td>
@@ -591,9 +561,9 @@ export default function ReceptionDashboard() {
           {activeTab === 'doctors' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
               {doctors.map(doc => (
-                <div key={doc.id} className="glass-card !p-8 bg-white border-2 border-white hover-scale-102 transition-all">
+                <div key={doc.id} className="bg-white p-8 rounded-[32px] shadow-lg border border-slate-50 hover:scale-105 transition-all">
                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-primary text-2xl font-black">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-[#0A4D68] text-2xl font-black">
                          {doc.name.charAt(0)}
                       </div>
                       <button 
@@ -622,85 +592,43 @@ export default function ReceptionDashboard() {
 
         {/* Success Modal */}
         {showSuccessModal && (
-          <div className="modal-overlay">
-            <div className="glass-card !p-12 !max-w-md bg-white border-2 border-white text-center animate-in zoom-in-95">
-               <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-100">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] backdrop-blur-sm">
+            <div className="bg-white p-12 rounded-[40px] max-w-md text-center shadow-2xl border-2 border-white animate-in zoom-in-95">
+               <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
                   <CheckCircle2 size={40} />
                </div>
                <h2 className="text-3xl font-black text-slate-800 mb-4">{successInfo?.title}</h2>
                <p className="text-slate-500 font-medium mb-10 leading-relaxed">{successInfo?.message}</p>
-               
                <div className="bg-slate-50 rounded-2xl p-8 mb-10 border border-slate-100">
                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-2">Clinical Token ID</div>
-                  <div className="text-5xl font-black text-primary">#{successInfo?.token}</div>
-                  {successInfo?.uhid && (
-                    <div className="mt-8 pt-8 border-t border-dashed border-slate-200">
-                       <div className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-2">Hospital Universal ID (UHID)</div>
-                       <div className="text-2xl font-black text-slate-800">{successInfo.uhid}</div>
-                    </div>
-                  )}
+                  <div className="text-5xl font-black text-[#0A4D68]">#{successInfo?.token}</div>
                </div>
-
-               <button className="btn btn-primary w-full h-16 !rounded-2xl text-lg font-black" onClick={() => setShowSuccessModal(false)}>Proceed to Next Registration</button>
+               <button className="w-full py-5 bg-[#0A4D68] text-white rounded-2xl text-lg font-black" onClick={() => setShowSuccessModal(false)}>Next Registration</button>
             </div>
           </div>
         )}
 
         {/* History Modal */}
         {showHistoryModal && historyData && (
-          <div className="modal-overlay">
-            <div className="glass-card !max-w-3xl !max-h-[85vh] bg-white border-2 border-white overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] backdrop-blur-sm">
+            <div className="bg-white max-w-3xl w-full max-h-[85vh] rounded-[40px] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
                <div className="p-8 border-b border-slate-50 flex justify-between items-center">
                   <div>
-                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Digital Clinical Records</h2>
-                    <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">{historyData.patient.name} | {historyData.patient.uhid}</p>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Digital Records</h2>
+                    <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">{historyData.patient.name}</p>
                   </div>
                   <button className="h-12 w-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400" onClick={() => setShowHistoryModal(false)}><X size={20} /></button>
                </div>
-               <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-6 bg-slate-50/50">
+               <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
                   {historyData.history.length > 0 ? historyData.history.map(v => (
-                    <div key={v.id} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                       <div className="flex justify-between items-start mb-6 pb-6 border-b border-dashed border-slate-100">
-                          <div className="flex flex-col">
-                             <span className="text-xs font-black text-slate-300 uppercase tracking-widest mb-1">Visit Narrative</span>
-                             <span className="text-lg font-black text-slate-800">{new Date(v.visitDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
-                          </div>
-                          <div className="px-4 py-2 bg-primary/5 text-primary rounded-xl text-xs font-black border border-primary/10">Dr. {v.doctor?.name || 'Consultant'}</div>
+                    <div key={v.id} className="bg-white rounded-2xl p-6 mb-4 shadow-sm border border-slate-100">
+                       <div className="flex justify-between mb-4 border-b pb-4">
+                          <div className="font-black text-[#0A4D68]">{new Date(v.visitDate).toLocaleDateString()}</div>
+                          <div className="text-xs font-bold text-slate-400">Dr. {v.doctor?.name}</div>
                        </div>
-                       <div className="grid grid-cols-2 gap-8 text-xs font-medium">
-                          <div className="flex flex-col gap-4">
-                             <div>
-                                <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Diagnosis</span>
-                                <div className="text-sm font-bold text-slate-700">{v.diagnosis || 'Clinical evaluation pending'}</div>
-                             </div>
-                             <div>
-                                <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Complaints</span>
-                                <div className="text-sm font-bold text-slate-700">{v.chiefComplaints || 'Standard Checkup'}</div>
-                             </div>
-                          </div>
-                          <div className="flex flex-col gap-4">
-                             {v.prescriptions?.length > 0 && (
-                               <div>
-                                  <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Medications</span>
-                                  <div className="flex flex-wrap gap-2">
-                                     {v.prescriptions.map((p:any) => <span key={p.id} className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-black border border-emerald-100">{p.drugName} ({p.dosage})</span>)}
-                                  </div>
-                               </div>
-                             )}
-                             {v.labOrders?.length > 0 && (
-                               <div>
-                                  <span className="block font-black text-slate-300 uppercase tracking-widest mb-1.5">Diagnostic Orders</span>
-                                  <div className="flex flex-wrap gap-2">
-                                     {v.labOrders.map((l:any) => <span key={l.id} className="bg-primary/5 text-primary px-3 py-1 rounded-lg font-black border border-primary/10">{l.testName}</span>)}
-                                  </div>
-                               </div>
-                             )}
-                          </div>
-                       </div>
+                       <div className="text-sm font-bold text-slate-700">{v.diagnosis || 'Evaluation pending'}</div>
                     </div>
-                  )) : (
-                    <div className="py-20 text-center font-bold text-slate-300">No medical history found for this UHID.</div>
-                  )}
+                  )) : <div className="text-center py-10 font-bold text-slate-300">No history found.</div>}
                </div>
             </div>
           </div>
@@ -708,42 +636,23 @@ export default function ReceptionDashboard() {
 
         {/* Bill Modal */}
         {showBillModal && selectedBill && (
-          <div className="modal-overlay">
-            <div className="glass-card !p-10 !max-w-md bg-white border-2 border-white animate-in zoom-in-95">
-               <h2 className="text-2xl font-black text-slate-800 mb-2">Payment Collection</h2>
-               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">Ref: {selectedBill.visit.patient.name} | ₹{selectedBill.finalAmount}</p>
-               
-               <div className="flex flex-col gap-6">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] backdrop-blur-sm">
+            <div className="bg-white p-10 rounded-[40px] max-w-md w-full shadow-2xl border-2 border-white animate-in zoom-in-95">
+               <h2 className="text-2xl font-black text-slate-800 mb-6">Collect Payment</h2>
+               <div className="space-y-6">
                   <div className="form-group">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Payment Instrument</label>
-                     <select className="form-input !h-12 font-bold" value={billingForm.paymentMode} onChange={e => setBillingForm({...billingForm, paymentMode: e.target.value})}>
-                        <option>CASH</option>
-                        <option>UPI / QR</option>
-                        <option>CARD</option>
-                        <option>INSURANCE</option>
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Payment Mode</label>
+                     <select className="w-full p-4 bg-slate-50 border-none rounded-xl font-bold" value={billingForm.paymentMode} onChange={e => setBillingForm({...billingForm, paymentMode: e.target.value})}>
+                        <option>CASH</option><option>UPI / QR</option><option>CARD</option>
                      </select>
                   </div>
                   <div className="form-group">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Discount / Waiver (₹)</label>
-                     <input type="number" className="form-input !h-12 font-bold" value={billingForm.discount} onChange={e => setBillingForm({...billingForm, discount: parseInt(e.target.value) || 0})} />
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Discount (₹)</label>
+                     <input type="number" className="w-full p-4 bg-slate-50 border-none rounded-xl font-bold" value={billingForm.discount} onChange={e => setBillingForm({...billingForm, discount: parseInt(e.target.value) || 0})} />
                   </div>
-                  <button className="btn btn-primary w-full h-14 !rounded-xl font-black text-lg" onClick={handlePayBill} disabled={loading}>Confirm Receipt of ₹{selectedBill.finalAmount - (billingForm.discount || 0)}</button>
-                  <button className="btn btn-outline w-full h-14 !rounded-xl border-none text-slate-400" onClick={() => setShowBillModal(false)}>Cancel</button>
+                  <button className="w-full py-5 bg-emerald-500 text-white rounded-2xl font-black text-lg" onClick={handlePayBill}>Collect ₹{selectedBill.finalAmount - (billingForm.discount || 0)}</button>
+                  <button className="w-full py-3 text-slate-400 font-bold" onClick={() => setShowBillModal(false)}>Cancel</button>
                </div>
-            </div>
-          </div>
-        )}
-
-        {/* Duplicate Modal */}
-        {showDuplicateModal && (
-          <div className="modal-overlay">
-            <div className="glass-card !p-12 bg-white border-2 border-white text-center animate-in zoom-in-95">
-               <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-8">
-                  <AlertCircle size={40} />
-               </div>
-               <h2 className="text-2xl font-black text-slate-800 mb-4">Patient Integrity Conflict</h2>
-               <p className="text-slate-500 font-medium mb-10 leading-relaxed">The patient <strong>{duplicateInfo?.name}</strong> is already registered under UHID: <strong>{duplicateInfo?.uhid}</strong>.</p>
-               <button className="btn btn-primary w-full h-14 !rounded-xl" onClick={() => setShowDuplicateModal(false)}>Acknowledge & Search</button>
             </div>
           </div>
         )}
@@ -766,16 +675,11 @@ function SidebarItem({ active, icon, label, onClick }: any) {
 
 function StatCard({ label, value, icon, trend, isPositive }: any) {
   return (
-    <div className="glass-card !p-7 hover-scale-102 transition-all bg-white/80 !border-white">
+    <div className="bg-white p-7 rounded-[24px] shadow-lg border border-slate-50 hover:scale-105 transition-all">
        <div className="flex justify-between items-start mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary shadow-tiny">
+          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[#0A4D68]">
             {icon}
           </div>
-          {trend !== undefined && (
-            <div className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-              {isPositive ? '+' : '-'}{trend}%
-            </div>
-          )}
        </div>
        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[2px] mb-1">{label}</div>
        <div className="text-3xl font-black text-slate-800 tracking-tighter">{value}</div>
