@@ -8,7 +8,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ patie
     const { patientId } = await params;
     const body = await req.json();
     if (body.password !== 'aravind55') return NextResponse.json({ success: false, error: 'Invalid password' }, { status: 401 });
-
     await prisma.$transaction([
       prisma.prescription.deleteMany({ where: { visit: { patientId } } }),
       prisma.labOrder.deleteMany({ where: { visit: { patientId } } }),
