@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -32,12 +32,11 @@ model Patient {
   age       Int
   gender    String
   address   String?
-  medicalHistory String?
-
+  
   // Compliance Fields
   abhaId    String?  @unique
   consentGranted Boolean @default(false)
-  consentDate DateTime?
+  consentDate    DateTime?
   consentRevokedDate DateTime?
 
   createdAt DateTime @default(now())
@@ -150,8 +149,8 @@ model LabOrder {
   reportData      String?  // JSON or Markdown findings
   billId          String?
   bill            Bill?    @relation(fields: [billId], references: [id])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Bill {
@@ -186,3 +185,4 @@ model AuditLog {
   @@index([patientId])
   @@index([userId])
 }
+
